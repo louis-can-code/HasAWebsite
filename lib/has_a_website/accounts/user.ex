@@ -31,6 +31,12 @@ defmodule HasAWebsite.Accounts.User do
   end
 
   defp validate_username(changeset) do
+    reserved_usernames = [
+    "admin", "administrator", "root", "moderator", "staff",
+    "support", "system", "api", "your_app_name", "official",
+    "anonymous", "null", "test", "guest", "sudo"
+    ]
+
     changeset
     |> validate_required([:username])
     |> validate_length(:username, min: 3, max: 36)
@@ -42,6 +48,8 @@ defmodule HasAWebsite.Accounts.User do
       message: "can not contain consecutive special characters")
     |> validate_format(:username, ~r/^[^\s]*$/,
       message: "can not contain whitespace")
+    |> validate_exclusion(:username, reserved_usernames,
+      message: "username is reserved")
     |> unsafe_validate_unique(:username, HasAWebsite.Repo)
     |> unique_constraint(:username)
   end
