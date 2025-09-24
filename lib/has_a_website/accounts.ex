@@ -11,6 +11,20 @@ defmodule HasAWebsite.Accounts do
   ## Database getters
 
   @doc """
+  Gets a user by username
+
+  ## Examples
+      iex> get_user_by_username("johnsmith")
+      %User{}
+
+      iex> get_user_by_username("unknown")
+      nil
+  """
+  def get_user_by_username(username) when is_binary(username) do
+    Repo.get_by(User, username: username)
+  end
+
+  @doc """
   Gets a user by email.
 
   ## Examples
@@ -38,9 +52,35 @@ defmodule HasAWebsite.Accounts do
       nil
 
   """
+  @deprecated "Use get_user_by_login_and_password/2 instead"
   def get_user_by_email_and_password(email, password)
       when is_binary(email) and is_binary(password) do
     user = Repo.get_by(User, email: email)
+    if User.valid_password?(user, password), do: user
+  end
+
+  @doc """
+  Gets a user by username or email, and password
+
+  ## Examples
+
+      iex> get_user_by_login_and_password("john_smith123", "correct_password")
+      %User{}
+
+      iex> get_user_by_login_and_password("john.smith@example.com, "correct_password")
+      %User{}
+
+      iex> get_user_by_login_and_password("john.smith@example.com, "invalid_password")
+      nil
+  """
+  def get_user_by_login_and_password(login, password)
+      when is_binary(login) and is_binary(password) do
+    user =
+      if String.contains?(login, "@") do
+        Repo.get_by(User, email: login)
+      else
+        Repo.get_by(User, username: login)
+      end
     if User.valid_password?(user, password), do: user
   end
 
@@ -147,6 +187,35 @@ defmodule HasAWebsite.Accounts do
         _ -> {:error, :transaction_aborted}
       end
     end)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user username.
+
+  ## Examples
+      iex> change_user_username(user)
+      %Ecto.Changeset{data:%User{}}
+  """
+  def change_user_username(user, attrs \\ %{}) do
+    User.username_changeset(user, attrs)
+  end
+
+  @doc """
+  Updates the user username.
+
+  Returns a tuple with the updated user.
+
+  ## Examples
+      iex> update_user_username(user, %{username: "valid_username"})
+      {:ok, %User{}}
+
+      iex> update_user_username(user, %{username: "invalid username"})
+      {:error, %Ecto.Changeset{}}
+  """
+  def update_user_username(user, attrs) do
+    user
+    |> User.username_changeset(attrs)
+    |> Repo.update()
   end
 
   @doc """
