@@ -55,7 +55,7 @@ defmodule HasAWebsite.Accounts.User do
     original_username = changeset.data.username
     new_username = get_field(changeset, :username)
 
-    #maintains case insensitive unique constraint, while allowing users to
+    #maintains case insensitive unique constraint, while allowing users
     #to change the case of their own username
     cond do
       is_nil(original_username) || String.downcase(original_username) != String.downcase(new_username) ->
