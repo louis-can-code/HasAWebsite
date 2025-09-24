@@ -14,7 +14,8 @@ defmodule HasAWebsite.Repo.Migrations.CreateUsersAuthTables do
       timestamps(type: :utc_datetime)
     end
 
-    create unique_index(:users, [:email, :username])
+    create unique_index(:users, [:username])
+    create unique_index(:users, [:email])
 
     create table(:users_tokens) do
       add :user_id, references(:users, on_delete: :delete_all), null: false
