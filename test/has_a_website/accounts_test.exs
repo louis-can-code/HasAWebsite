@@ -6,6 +6,17 @@ defmodule HasAWebsite.AccountsTest do
   import HasAWebsite.AccountsFixtures
   alias HasAWebsite.Accounts.{User, UserToken}
 
+  describe "get_user_by_username/1" do
+    test "does not return the user if the username does not exist" do
+      refute Accounts.get_user_by_username("unknown")
+    end
+
+    test "returns the user if the username exists" do
+      %{id: id} = user = user_fixture()
+      assert %User{id: ^id} = Accounts.get_user_by_email(user.username)
+    end
+  end
+
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do
       refute Accounts.get_user_by_email("unknown@example.com")
@@ -17,14 +28,25 @@ defmodule HasAWebsite.AccountsTest do
     end
   end
 
-  describe "get_user_by_email_and_password/2" do
+  describe "get_user_by_login_and_password/2" do
     test "does not return the user if the email does not exist" do
-      refute Accounts.get_user_by_email_and_password("unknown@example.com", "hello world!")
+      refute Accounts.get_user_by_login_and_password("unknown@example.com", "Hello world!")
+    end
+
+    test "does not return the user if the username does not exist" do
+      refute Accounts.get_user_by_login_and_password("unknown", "Hello world!")
     end
 
     test "does not return the user if the password is not valid" do
       user = user_fixture() |> set_password()
-      refute Accounts.get_user_by_email_and_password(user.email, "invalid")
+      refute Accounts.get_user_by_login_and_password(user.email, "invalid")
+    end
+
+    test "returns the user if the username and password are valid" do
+      %{id: id} = user = user_fixture() |> set_password()
+
+      assert %User{id: ^id} =
+               Accounts.get_user_by_email_and_password(user.username, valid_user_password())
     end
 
     test "returns the user if the email and password are valid" do
@@ -86,7 +108,14 @@ defmodule HasAWebsite.AccountsTest do
 
     test "rejects reserved username" do
       email = unique_user_email()
-      {:error, changeset} = Accounts.register_user(%{email: email, username: "guest"})
+      {:error, changeset} = Accounts.register_user(%{email: email, username: "test"})
+
+      assert %{username: ["username is reserved"]} = errors_on(changeset)
+    end
+
+    test "case insensitively rejects reserved username" do
+      email = unique_user_email()
+      {:error, changeset} = Accounts.register_user(%{email: email, username: "tEst"})
 
       assert %{username: ["username is reserved"]} = errors_on(changeset)
     end
@@ -267,6 +296,52 @@ defmodule HasAWebsite.AccountsTest do
     end
   end
 
+  describe "change_user_username/2" do
+    test "returns a user changeset" do
+      assert %Ecto.Changeset{} = changeset = Accounts.change_user_username(%User{})
+      assert changeset.required == [:username]
+    end
+  end
+
+  describe "update_user_username/2" do
+    setup do
+      %{user: user_fixture()}
+    end
+
+    test "validates username", %{user: user} do
+      {:error, changeset} = Accounts.update_user_username(user, %{"username" => "in--valid"})
+
+      assert %{username: ["can not contain consecutive special characters"]} = errors_on(changeset)
+    end
+
+    test "updates username", %{user: user} do
+      username = unique_user_name()
+      {:ok, changeset} = Accounts.update_user_username(user, %{"username" => username})
+
+      assert Accounts.get_user_by_email(user.email).username == username
+      assert is_nil(Accounts.get_user_by_username(user.username))
+    end
+
+    test "validates username uniqueness", %{user: user} do
+      %{username: username} = user_fixture()
+
+      {:error, changeset} = Accounts.update_user_username(user, %{"username" => username})
+      assert %{username: ["has already been taken"]} = on_errors(changeset)
+    end
+
+    test "ignores uniqueness constraint when changing case in own username", %{user: user} do
+      {:ok, changeset} = Accounts.update_user_username(user, %{"username" => String.upcase(user.username)})
+
+      assert Accounts.get_user_by_email(user.email).username == String.upcase(user.username)
+    end
+
+    test "validates whether a change has been made", %{user: user} do
+      {:error, changeset} = Accounts.update_user_username(user, %{"username" => user.username})
+
+      assert %{username: ["did not change"]} = on_errors(changeset)
+    end
+  end
+
   describe "change_user_password/3" do
     test "returns a user changeset" do
       assert %Ecto.Changeset{} = changeset = Accounts.change_user_password(%User{})
@@ -278,13 +353,13 @@ defmodule HasAWebsite.AccountsTest do
         Accounts.change_user_password(
           %User{},
           %{
-            "password" => "new valid password"
+            "password" => "New val1d password"
           },
           hash_password: false
         )
 
       assert changeset.valid?
-      assert get_change(changeset, :password) == "new valid password"
+      assert get_change(changeset, :password) == "New val1d password"
       assert is_nil(get_change(changeset, :hashed_password))
     end
   end
@@ -319,12 +394,12 @@ defmodule HasAWebsite.AccountsTest do
     test "updates the password", %{user: user} do
       {:ok, {user, expired_tokens}} =
         Accounts.update_user_password(user, %{
-          password: "new valid password"
+          password: "New val1d password"
         })
 
       assert expired_tokens == []
       assert is_nil(user.password)
-      assert Accounts.get_user_by_email_and_password(user.email, "new valid password")
+      assert Accounts.get_user_by_login_and_password(user.email, "New val1d password")
     end
 
     test "deletes all tokens for the given user", %{user: user} do
@@ -332,7 +407,7 @@ defmodule HasAWebsite.AccountsTest do
 
       {:ok, {_, _}} =
         Accounts.update_user_password(user, %{
-          password: "new valid password"
+          password: "New val1d password"
         })
 
       refute Repo.get_by(UserToken, user_id: user.id)
