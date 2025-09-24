@@ -49,27 +49,100 @@ defmodule HasAWebsite.AccountsTest do
   end
 
   describe "register_user/1" do
+    test "requires name to be set" do
+      email = unique_user_email()
+      {:error, changeset} = Accounts.register_user(%{email: email})
+
+      assert %{username: ["can't be blank"]} = errors_on(changeset)
+    end
+
+    test "rejects username with invalid characters" do
+      email = unique_user_email()
+      {:error, changeset} = Accounts.register_user(%{email: email, username: "dw?12"})
+
+      assert %{username: ["can only contain numbers, letters, underscores, and/or hyphens"]} = errors_on(changeset)
+    end
+
+    test "rejects username starting or ending with a hyphen/underscore" do
+      email = unique_user_email()
+      {:error, changeset} = Accounts.register_user(%{email: email, username: "-username"})
+
+      assert %{username: ["must not start or end with a hyphen or underscore"]} = errors_on(changeset)
+    end
+
+    test "rejects username containing consecutive special characters" do
+      email = unique_user_email()
+      {:error, changeset} = Accounts.register_user(%{email: email, username: "us_-ername"})
+
+      assert %{username: ["can not contain consecutive special characters"]} = errors_on(changeset)
+    end
+
+    test "rejects username containing whitespace" do
+      email = unique_user_email()
+      {:error, changeset} = Accounts.register_user(%{email: email, username: "user name"})
+
+      assert %{username: ["can not contain whitespace"]} = errors_on(changeset)
+    end
+
+    test "rejects reserved username" do
+      email = unique_user_email()
+      {:error, changeset} = Accounts.register_user(%{email: email, username: "guest"})
+
+      assert %{username: ["username is reserved"]} = errors_on(changeset)
+    end
+
+    test "validates minimum value for username" do
+      email = unique_user_email()
+      too_short = "ab"
+      {:error, changeset} = Accounts.register_user(%{email: email, username: too_short})
+
+      assert %{username: ["should be at least 3 character(s)"]} = errors_on(changeset)
+    end
+
+    test "validates maximum value for username" do
+      email = unique_user_email()
+      too_long = String.duplicate("db", 30)
+      {:error, changeset} = Accounts.register_user(%{email: email, username: too_long})
+
+      assert %{username: ["should be at most 36 character(s)"]} = errors_on(changeset)
+    end
+
+    test "validates username uniqueness" do
+      email = unique_user_email()
+      %{username: username} = user_fixture()
+      {:error, changeset} = Accounts.register_user(%{email: email, username: username})
+      assert "has already been taken" in errors_on(changeset).username
+
+      # Now try with the upper cased username too, to check that email case is ignored.
+      {:error, changeset} = Accounts.register_user(%{email: String.upcase(username)})
+      assert "has already been taken" in errors_on(changeset).username
+    end
+
     test "requires email to be set" do
-      {:error, changeset} = Accounts.register_user(%{})
+      username = unique_user_name()
+      {:error, changeset} = Accounts.register_user(%{username: username})
 
       assert %{email: ["can't be blank"]} = errors_on(changeset)
     end
 
     test "validates email when given" do
-      {:error, changeset} = Accounts.register_user(%{email: "not valid"})
+      username = unique_user_name()
+      {:error, changeset} = Accounts.register_user(%{email: "not valid", username: username})
 
       assert %{email: ["must have the @ sign and no spaces"]} = errors_on(changeset)
     end
 
     test "validates maximum values for email for security" do
+      username = unique_user_name()
       too_long = String.duplicate("db", 100)
-      {:error, changeset} = Accounts.register_user(%{email: too_long})
+      {:error, changeset} = Accounts.register_user(%{email: too_long, username: username})
       assert "should be at most 160 character(s)" in errors_on(changeset).email
     end
 
     test "validates email uniqueness" do
       %{email: email} = user_fixture()
-      {:error, changeset} = Accounts.register_user(%{email: email})
+      username = unique_user_name()
+      {:error, changeset} = Accounts.register_user(%{email: email, username: username})
       assert "has already been taken" in errors_on(changeset).email
 
       # Now try with the upper cased email too, to check that email case is ignored.
@@ -79,8 +152,10 @@ defmodule HasAWebsite.AccountsTest do
 
     test "registers users without password" do
       email = unique_user_email()
-      {:ok, user} = Accounts.register_user(valid_user_attributes(email: email))
+      username = unique_user_name()
+      {:ok, user} = Accounts.register_user(valid_user_attributes(email: email, username: username))
       assert user.email == email
+      assert user.username == username
       assert is_nil(user.hashed_password)
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)

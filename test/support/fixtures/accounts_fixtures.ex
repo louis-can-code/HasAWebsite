@@ -15,7 +15,8 @@ defmodule HasAWebsite.AccountsFixtures do
 
   def valid_user_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{
-      email: unique_user_email()
+      email: unique_user_email(),
+      username: unique_user_name()
     })
   end
 
