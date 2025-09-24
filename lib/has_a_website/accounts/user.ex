@@ -27,31 +27,48 @@ defmodule HasAWebsite.Accounts.User do
     user
     |> cast(attrs, [:email, :username])
     |> validate_email(opts)
-    |> validate_username()
+    |> validate_user_username()
   end
 
-  defp validate_username(changeset) do
+  defp validate_user_username(changeset) do
     reserved_usernames = [
     "admin", "administrator", "root", "moderator", "staff",
     "support", "system", "api", "your_app_name", "official",
     "anonymous", "null", "test", "guest", "sudo"
     ]
 
-    changeset
-    |> validate_required([:username])
-    |> validate_length(:username, min: 3, max: 36)
-    |> validate_format(:username, ~r/^[a-z0-9_-]+$/i,
-      message: "can only contain numbers, letters, underscores, and/or hyphens")
-    |> validate_format(:username, ~r/^[a-z0-9][a-z0-9_-]*[a-z0-9]/i,
-      message: "must not start or end with a hyphen or underscore")
-    |> validate_format(:username, ~r/^(?!.*[_-][_-]).*$/,
-      message: "can not contain consecutive special characters")
-    |> validate_format(:username, ~r/^[^\s]*$/,
-      message: "can not contain whitespace")
-    |> validate_exclusion(:username, reserved_usernames,
-      message: "username is reserved")
-    |> unsafe_validate_unique(:username, HasAWebsite.Repo)
-    |> unique_constraint(:username)
+    changeset =
+      changeset
+      |> validate_required([:username])
+      |> validate_length(:username, min: 3, max: 36)
+      |> validate_format(:username, ~r/^[a-z0-9_-]+$/i,
+        message: "can only contain numbers, letters, underscores, and/or hyphens")
+      |> validate_format(:username, ~r/^[a-z0-9][a-z0-9_-]*[a-z0-9]$/i,
+        message: "must not start or end with a hyphen or underscore")
+      |> validate_format(:username, ~r/^(?!.*[_-][_-]).*$/,
+        message: "can not contain consecutive special characters")
+      |> validate_format(:username, ~r/^[^\s]*$/,
+        message: "can not contain whitespace")
+      |> validate_exclusion(:username, reserved_usernames,
+        message: "username is reserved")
+
+    original_username = changeset.data.username
+    new_username = get_field(changeset, :username)
+
+    #maintains case insensitive unique constraint, while allowing users to
+    #to change the case of their own username
+    cond do
+      is_nil(original_username) || String.downcase(original_username) != String.downcase(new_username) ->
+        changeset
+        |> unsafe_validate_unique(:username, HasAWebsite.Repo)
+        |> unique_constraint(:username)
+
+      original_username == new_username ->
+        add_error(changeset, :username, "did not change")
+
+      true ->
+        changeset
+    end
   end
 
 
@@ -107,10 +124,21 @@ defmodule HasAWebsite.Accounts.User do
     |> cast(attrs, [:email, :password])
     |> validate_required([:email, :password, :username])
     |> validate_email(opts)
-    |> validate_username()
+    |> validate_user_username()
     |> validate_confirmation(:password, message: "does not match password")
     |> validate_password(opts)
     |> put_change(:role, :admin)
+  end
+
+  @doc """
+  A user changeset for changing the username
+
+  It requires the username to change otherwise an error is added.
+  """
+  def username_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:username])
+    |> validate_user_username()
   end
 
   @doc """
