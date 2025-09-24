@@ -30,13 +30,12 @@ defmodule HasAWebsite.Accounts.User do
     |> validate_user_username()
   end
 
+  @reserved_usernames ~w(
+    admin administrator root moderator staff
+    support system api unknown official
+    anonymous null test guest sudo
+    )
   defp validate_user_username(changeset) do
-    reserved_usernames = [
-    "admin", "administrator", "root", "moderator", "staff",
-    "support", "system", "api", "your_app_name", "official",
-    "anonymous", "null", "test", "guest", "sudo"
-    ]
-
     changeset =
       changeset
       |> validate_required([:username])
@@ -49,8 +48,13 @@ defmodule HasAWebsite.Accounts.User do
         message: "can not contain consecutive special characters")
       |> validate_format(:username, ~r/^[^\s]*$/,
         message: "can not contain whitespace")
-      |> validate_exclusion(:username, reserved_usernames,
-        message: "username is reserved")
+      |> validate_change(:username, fn :username, username ->
+          if Enum.any?(@reserved_usernames, &(String.downcase(username) == &1)) do
+            [username: "username is reserved"]
+          else
+            []
+          end
+        end)
 
     original_username = changeset.data.username
     new_username = get_field(changeset, :username)
