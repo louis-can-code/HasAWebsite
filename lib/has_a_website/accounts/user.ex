@@ -10,6 +10,9 @@ defmodule HasAWebsite.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :promoted_at, :utc_datetime
+
+    belongs_to :promoted_by, __MODULE__
 
     timestamps(type: :utc_datetime)
   end
@@ -118,6 +121,20 @@ defmodule HasAWebsite.Accounts.User do
     else
       changeset
     end
+  end
+
+  @doc """
+  A user changeset for promoting a user to the creator role
+  """
+  def creator_promotion_changeset(promoter, user) do
+    user
+    |> change()
+    |> validate_exclusion(:role, [:admin, :creator],
+      message: "already holds an elevated role")
+    |> put_change(:role, :creator)
+    |> put_change(:promoted_by_id, promoter.id)
+    |> put_change(:promoted_at, DateTime.utc_now(:second))
+    |> assoc_constraint(:promoted_by)
   end
 
   @doc """

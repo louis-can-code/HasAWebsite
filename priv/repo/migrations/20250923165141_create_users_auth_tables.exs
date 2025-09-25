@@ -10,12 +10,15 @@ defmodule HasAWebsite.Repo.Migrations.CreateUsersAuthTables do
       add :role, :string, null: false, default: "user"
       add :hashed_password, :string
       add :confirmed_at, :utc_datetime
+      add :promoted_by_id, references(:users, on_delete: :nothing)
+      add :promoted_at, :utc_datetime
 
       timestamps(type: :utc_datetime)
     end
 
     create unique_index(:users, [:username])
     create unique_index(:users, [:email])
+    create index(:users, [:role])
 
     create table(:users_tokens) do
       add :user_id, references(:users, on_delete: :delete_all), null: false

@@ -41,6 +41,29 @@ defmodule HasAWebsite.Accounts do
   end
 
   @doc """
+  Gets a user by either email or username.
+
+  ## Examples
+
+      iex> get_user_by_login("foo@example.com")
+      %User{}
+
+      iex> get_user_by_login("johnsmith123")
+      %User{}
+
+      iex> get_user_by_login("unknown@example.com")
+      nil
+
+  """
+  def get_user_by_login(login) when is_binary(login) do
+    if String.contains?(login, "@") do
+      Repo.get_by(User, email: login)
+    else
+      Repo.get_by(User, username: login)
+    end
+  end
+
+  @doc """
   Gets a user by email and password.
 
   ## Examples
@@ -252,6 +275,47 @@ defmodule HasAWebsite.Accounts do
     |> User.password_changeset(attrs)
     |> update_user_and_delete_all_tokens()
   end
+
+  @doc """
+  Promotes a given user to the creator role. Requires explicit confirmation (from the user promoting).
+
+  ## Examples
+
+      iex> promote_to_creator(admin, "user123", confirmation: true)
+      {:ok, %User{}}
+
+      iex> promote_to_creator(unauthorised_user, "user123", confirmation: true)
+      {:error, :unauthorised}
+
+      iex> promote_to_creator(admin, "user123")
+      {:error, :confirmation_required}
+  """
+  @spec promote_to_creator(User.t(), String.t(), keyword()) ::
+    {:ok, User.t()}
+    | {:error, :unauthorised}
+    | {:error, :confirmation_required}
+    | {:error, :user_not_found}
+    | {:error, Ecto.Changeset.t()}
+  def promote_to_creator(promoter, promotee_name_or_email, opts \\ []) do
+    cond do
+      !Keyword.get(opts, :confirmation, false) ->
+        {:error, :confirmation_required}
+
+      !promoter_is_authorised?(promoter) ->
+        {:error, :unauthorised}
+
+      true ->
+        case get_user_by_login(promotee_name_or_email) do
+          nil -> {:error, :user_not_found}
+          user ->
+            User.creator_promotion_changeset(promoter, user)
+            |> Repo.update()
+        end
+    end
+  end
+
+  defp promoter_is_authorised?(%User{role: :admin}), do: true
+  defp promoter_is_authorised?(_), do: false
 
   ## Session
 
