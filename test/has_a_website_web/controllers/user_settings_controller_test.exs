@@ -35,8 +35,8 @@ defmodule HasAWebsiteWeb.UserSettingsControllerTest do
         put(conn, ~p"/users/settings", %{
           "action" => "update_password",
           "user" => %{
-            "password" => "new valid password",
-            "password_confirmation" => "new valid password"
+            "password" => "New val1d password",
+            "password_confirmation" => "New val1d password"
           }
         })
 
@@ -47,7 +47,7 @@ defmodule HasAWebsiteWeb.UserSettingsControllerTest do
       assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
                "Password updated successfully"
 
-      assert Accounts.get_user_by_email_and_password(user.email, "new valid password")
+      assert Accounts.get_user_by_email_and_password(user.email, "New val1d password")
     end
 
     test "does not update password on invalid data", %{conn: conn} do
