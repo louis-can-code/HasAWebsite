@@ -10,13 +10,13 @@ defmodule HasAWebsite.AccountsFixtures do
   alias HasAWebsite.Accounts.Scope
 
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
-  def unique_user_name, do: "user#{System.unique_integer()}"
+  def unique_user_username, do: "user#{System.unique_integer()}"
   def valid_user_password, do: "Hello world!"
 
   def valid_user_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{
       email: unique_user_email(),
-      username: unique_user_name()
+      username: unique_user_username()
     })
   end
 

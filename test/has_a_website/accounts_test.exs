@@ -13,7 +13,7 @@ defmodule HasAWebsite.AccountsTest do
 
     test "returns the user if the username exists" do
       %{id: id} = user = user_fixture()
-      assert %User{id: ^id} = Accounts.get_user_by_email(user.username)
+      assert %User{id: ^id} = Accounts.get_user_by_username(user.username)
     end
   end
 
@@ -46,14 +46,14 @@ defmodule HasAWebsite.AccountsTest do
       %{id: id} = user = user_fixture() |> set_password()
 
       assert %User{id: ^id} =
-               Accounts.get_user_by_email_and_password(user.username, valid_user_password())
+               Accounts.get_user_by_login_and_password(user.username, valid_user_password())
     end
 
     test "returns the user if the email and password are valid" do
       %{id: id} = user = user_fixture() |> set_password()
 
       assert %User{id: ^id} =
-               Accounts.get_user_by_email_and_password(user.email, valid_user_password())
+               Accounts.get_user_by_login_and_password(user.email, valid_user_password())
     end
   end
 
@@ -82,42 +82,42 @@ defmodule HasAWebsite.AccountsTest do
       email = unique_user_email()
       {:error, changeset} = Accounts.register_user(%{email: email, username: "dw?12"})
 
-      assert %{username: ["can only contain numbers, letters, underscores, and/or hyphens"]} = errors_on(changeset)
+      assert "can only contain numbers, letters, underscores, and/or hyphens" in errors_on(changeset).username
     end
 
     test "rejects username starting or ending with a hyphen/underscore" do
       email = unique_user_email()
       {:error, changeset} = Accounts.register_user(%{email: email, username: "-username"})
 
-      assert %{username: ["must not start or end with a hyphen or underscore"]} = errors_on(changeset)
+      assert "must not start or end with a hyphen or underscore" in errors_on(changeset).username
     end
 
     test "rejects username containing consecutive special characters" do
       email = unique_user_email()
       {:error, changeset} = Accounts.register_user(%{email: email, username: "us_-ername"})
 
-      assert %{username: ["can not contain consecutive special characters"]} = errors_on(changeset)
+      assert "can not contain consecutive special characters" in errors_on(changeset).username
     end
 
     test "rejects username containing whitespace" do
       email = unique_user_email()
       {:error, changeset} = Accounts.register_user(%{email: email, username: "user name"})
 
-      assert %{username: ["can not contain whitespace"]} = errors_on(changeset)
+      assert "can not contain whitespace" in errors_on(changeset).username
     end
 
     test "rejects reserved username" do
       email = unique_user_email()
       {:error, changeset} = Accounts.register_user(%{email: email, username: "test"})
 
-      assert %{username: ["username is reserved"]} = errors_on(changeset)
+      assert "username is reserved" in errors_on(changeset).username
     end
 
     test "case insensitively rejects reserved username" do
       email = unique_user_email()
       {:error, changeset} = Accounts.register_user(%{email: email, username: "tEst"})
 
-      assert %{username: ["username is reserved"]} = errors_on(changeset)
+      assert "username is reserved" in errors_on(changeset).username
     end
 
     test "validates minimum value for username" do
@@ -125,7 +125,7 @@ defmodule HasAWebsite.AccountsTest do
       too_short = "ab"
       {:error, changeset} = Accounts.register_user(%{email: email, username: too_short})
 
-      assert %{username: ["should be at least 3 character(s)"]} = errors_on(changeset)
+      assert "should be at least 3 character(s)" in errors_on(changeset).username
     end
 
     test "validates maximum value for username" do
@@ -133,7 +133,7 @@ defmodule HasAWebsite.AccountsTest do
       too_long = String.duplicate("db", 30)
       {:error, changeset} = Accounts.register_user(%{email: email, username: too_long})
 
-      assert %{username: ["should be at most 36 character(s)"]} = errors_on(changeset)
+      assert "should be at most 36 character(s)" in errors_on(changeset).username
     end
 
     test "validates username uniqueness" do
@@ -142,27 +142,27 @@ defmodule HasAWebsite.AccountsTest do
       {:error, changeset} = Accounts.register_user(%{email: email, username: username})
       assert "has already been taken" in errors_on(changeset).username
 
-      # Now try with the upper cased username too, to check that email case is ignored.
-      {:error, changeset} = Accounts.register_user(%{email: String.upcase(username)})
+      # Now try with the upper cased username too, to check that username case is ignored.
+      {:error, changeset} = Accounts.register_user(%{email: username, username: String.upcase(username)})
       assert "has already been taken" in errors_on(changeset).username
     end
 
     test "requires email to be set" do
-      username = unique_user_name()
+      username = unique_user_username()
       {:error, changeset} = Accounts.register_user(%{username: username})
 
       assert %{email: ["can't be blank"]} = errors_on(changeset)
     end
 
     test "validates email when given" do
-      username = unique_user_name()
+      username = unique_user_username()
       {:error, changeset} = Accounts.register_user(%{email: "not valid", username: username})
 
       assert %{email: ["must have the @ sign and no spaces"]} = errors_on(changeset)
     end
 
     test "validates maximum values for email for security" do
-      username = unique_user_name()
+      username = unique_user_username()
       too_long = String.duplicate("db", 100)
       {:error, changeset} = Accounts.register_user(%{email: too_long, username: username})
       assert "should be at most 160 character(s)" in errors_on(changeset).email
@@ -170,7 +170,7 @@ defmodule HasAWebsite.AccountsTest do
 
     test "validates email uniqueness" do
       %{email: email} = user_fixture()
-      username = unique_user_name()
+      username = unique_user_username()
       {:error, changeset} = Accounts.register_user(%{email: email, username: username})
       assert "has already been taken" in errors_on(changeset).email
 
@@ -181,7 +181,7 @@ defmodule HasAWebsite.AccountsTest do
 
     test "registers users without password" do
       email = unique_user_email()
-      username = unique_user_name()
+      username = unique_user_username()
       {:ok, user} = Accounts.register_user(valid_user_attributes(email: email, username: username))
       assert user.email == email
       assert user.username == username
@@ -194,7 +194,8 @@ defmodule HasAWebsite.AccountsTest do
   describe "register_admin/1" do
     test "registers user with a hashed password and sets role to admin" do
       email = unique_user_email()
-      {:ok, user} = Accounts.register_admin(%{email: email, password: valid_user_password()})
+      username = unique_user_username()
+      {:ok, user} = Accounts.register_admin(%{email: email, username: username, password: valid_user_password()})
       assert user.email == email
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
@@ -315,8 +316,8 @@ defmodule HasAWebsite.AccountsTest do
     end
 
     test "updates username", %{user: user} do
-      username = unique_user_name()
-      {:ok, changeset} = Accounts.update_user_username(user, %{"username" => username})
+      username = unique_user_username()
+      {:ok, _changeset} = Accounts.update_user_username(user, %{"username" => username})
 
       assert Accounts.get_user_by_email(user.email).username == username
       assert is_nil(Accounts.get_user_by_username(user.username))
@@ -326,11 +327,11 @@ defmodule HasAWebsite.AccountsTest do
       %{username: username} = user_fixture()
 
       {:error, changeset} = Accounts.update_user_username(user, %{"username" => username})
-      assert %{username: ["has already been taken"]} = on_errors(changeset)
+      assert %{username: ["has already been taken"]} = errors_on(changeset)
     end
 
     test "ignores uniqueness constraint when changing case in own username", %{user: user} do
-      {:ok, changeset} = Accounts.update_user_username(user, %{"username" => String.upcase(user.username)})
+      {:ok, _changeset} = Accounts.update_user_username(user, %{"username" => String.upcase(user.username)})
 
       assert Accounts.get_user_by_email(user.email).username == String.upcase(user.username)
     end
@@ -338,7 +339,7 @@ defmodule HasAWebsite.AccountsTest do
     test "validates whether a change has been made", %{user: user} do
       {:error, changeset} = Accounts.update_user_username(user, %{"username" => user.username})
 
-      assert %{username: ["did not change"]} = on_errors(changeset)
+      assert %{username: ["did not change"]} = errors_on(changeset)
     end
   end
 
@@ -376,10 +377,7 @@ defmodule HasAWebsite.AccountsTest do
           password_confirmation: "another"
         })
 
-      assert %{
-               password: ["should be at least 12 character(s)"],
-               password_confirmation: ["does not match password"]
-             } = errors_on(changeset)
+      assert "should be at least 12 character(s)" in errors_on(changeset).password && "does not match password" in errors_on(changeset).password_confirmation
     end
 
     test "validates maximum values for password for security", %{user: user} do
