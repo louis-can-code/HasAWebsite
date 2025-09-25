@@ -142,7 +142,7 @@ defmodule HasAWebsite.Accounts.User do
   """
   def admin_registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :password, :username])
     |> validate_required([:email, :password, :username])
     |> validate_email(opts)
     |> validate_user_username()
