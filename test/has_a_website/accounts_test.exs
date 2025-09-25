@@ -412,6 +412,46 @@ defmodule HasAWebsite.AccountsTest do
     end
   end
 
+  describe "promote_to_creator/3" do
+    setup do
+      %{user: user_fixture(), admin: admin_fixture()}
+    end
+
+    test "promotes a user", %{user: user, admin: admin} do
+      {:ok, _user} = Accounts.promote_to_creator(admin, user.username, confirmation: true)
+
+      promoted = Accounts.get_user!(user.id)
+
+      assert promoted.role == :creator
+      assert promoted.promoted_by_id == admin.id
+    end
+
+    test "verifies promoter is authorised", %{user: user} do
+      assert {:error, :unauthorised} == Accounts.promote_to_creator(user, user.username, confirmation: true)
+    end
+
+    test "requires confirmation", %{user: user, admin: admin} do
+      assert {:error, :confirmation_required} == Accounts.promote_to_creator(admin, user.username)
+    end
+
+    test "verifies user can be found", %{admin: admin} do
+      assert {:error, :user_not_found} == Accounts.promote_to_creator(admin, "unknown", confirmation: true)
+    end
+
+    test "can not promote creator", %{admin: admin, user: user} do
+      {:ok, creator} = Accounts.promote_to_creator(admin, user.username, confirmation: true)
+      {:error, changeset} = Accounts.promote_to_creator(admin, creator.username, confirmation: true)
+
+      assert "already holds an elevated role" in errors_on(changeset).role
+    end
+
+    test "can not promote admin", %{admin: admin} do
+      {:error, changeset} = Accounts.promote_to_creator(admin, admin.username, confirmation: true)
+
+      assert "already holds an elevated role" in errors_on(changeset).role
+    end
+  end
+
   describe "generate_user_session_token/1" do
     setup do
       %{user: user_fixture()}

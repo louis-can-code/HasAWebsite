@@ -20,6 +20,17 @@ defmodule HasAWebsite.AccountsFixtures do
     })
   end
 
+  def admin_fixture() do
+    {:ok, admin} = Accounts.register_admin(
+      %{
+        username: unique_user_username(),
+        email: unique_user_email(),
+        password: valid_user_password()
+      }
+    )
+    admin
+  end
+
   def unconfirmed_user_fixture(attrs \\ %{}) do
     {:ok, user} =
       attrs
