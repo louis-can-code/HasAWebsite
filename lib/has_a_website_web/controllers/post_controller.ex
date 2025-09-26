@@ -1,0 +1,66 @@
+defmodule HasAWebsiteWeb.PostController do
+  use HasAWebsiteWeb, :controller
+
+  alias HasAWebsite.Blog
+  alias HasAWebsite.Blog.Post
+
+  def index(conn, _params) do
+    posts = Blog.list_posts(conn.assigns.current_scope)
+    render(conn, :index, posts: posts)
+  end
+
+  def new(conn, _params) do
+    changeset =
+      Blog.change_post(conn.assigns.current_scope, %Post{
+        author_id: conn.assigns.current_scope.user.id
+      })
+
+    render(conn, :new, changeset: changeset)
+  end
+
+  def create(conn, %{"post" => post_params}) do
+    case Blog.create_post(conn.assigns.current_scope, post_params) do
+      {:ok, post} ->
+        conn
+        |> put_flash(:info, "Post created successfully.")
+        |> redirect(to: ~p"/posts/#{post}")
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        render(conn, :new, changeset: changeset)
+    end
+  end
+
+  def show(conn, %{"id" => id}) do
+    post = Blog.get_post!(conn.assigns.current_scope, id)
+    render(conn, :show, post: post)
+  end
+
+  def edit(conn, %{"id" => id}) do
+    post = Blog.get_post!(conn.assigns.current_scope, id)
+    changeset = Blog.change_post(conn.assigns.current_scope, post)
+    render(conn, :edit, post: post, changeset: changeset)
+  end
+
+  def update(conn, %{"id" => id, "post" => post_params}) do
+    post = Blog.get_post!(conn.assigns.current_scope, id)
+
+    case Blog.update_post(conn.assigns.current_scope, post, post_params) do
+      {:ok, post} ->
+        conn
+        |> put_flash(:info, "Post updated successfully.")
+        |> redirect(to: ~p"/posts/#{post}")
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        render(conn, :edit, post: post, changeset: changeset)
+    end
+  end
+
+  def delete(conn, %{"id" => id}) do
+    post = Blog.get_post!(conn.assigns.current_scope, id)
+    {:ok, _post} = Blog.delete_post(conn.assigns.current_scope, post)
+
+    conn
+    |> put_flash(:info, "Post deleted successfully.")
+    |> redirect(to: ~p"/posts")
+  end
+end

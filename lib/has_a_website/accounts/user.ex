@@ -14,6 +14,8 @@ defmodule HasAWebsite.Accounts.User do
 
     belongs_to :promoted_by, __MODULE__
 
+    has_many :posts, HasAWebsite.Blog.Post, foreign_key: :author_id
+
     timestamps(type: :utc_datetime)
   end
 
