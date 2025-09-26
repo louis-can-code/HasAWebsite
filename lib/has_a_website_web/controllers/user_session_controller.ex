@@ -33,8 +33,8 @@ defmodule HasAWebsiteWeb.UserSessionController do
   end
 
   # email + password login
-  def create(conn, %{"user" => %{"email" => email, "password" => password} = user_params}) do
-    if user = Accounts.get_user_by_login_and_password(email, password) do
+  def create(conn, %{"user" => %{"login" => login, "password" => password} = user_params}) do
+    if user = Accounts.get_user_by_login_and_password(login, password) do
       conn
       |> put_flash(:info, "Welcome back!")
       |> UserAuth.log_in_user(user, user_params)
@@ -43,7 +43,7 @@ defmodule HasAWebsiteWeb.UserSessionController do
 
       # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
       conn
-      |> put_flash(:error, "Invalid email or password")
+      |> put_flash(:error, "Invalid username/email or password")
       |> render(:new, form: form)
     end
   end

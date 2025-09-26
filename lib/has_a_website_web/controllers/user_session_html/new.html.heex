@@ -47,9 +47,9 @@
     <.form :let={f} for={@form} as={:user} id="login_form_password" action={~p"/users/log-in"}>
       <.input
         readonly={!!@current_scope}
-        field={f[:email]}
-        type="email"
-        label="Email"
+        field={f[:login]}
+        type="text"
+        label="Username or Email"
         autocomplete="username"
         required
       />
