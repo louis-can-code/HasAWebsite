@@ -295,8 +295,11 @@ defmodule HasAWebsite.Accounts do
     | {:error, :unauthorised}
     | {:error, :confirmation_required}
     | {:error, :user_not_found}
+    | {:error, :already_elevated}
     | {:error, Ecto.Changeset.t()}
   def promote_to_creator(promoter, promotee_name_or_email, opts \\ []) do
+    user = get_user_by_login(promotee_name_or_email)
+
     cond do
       !Keyword.get(opts, :confirmation, false) ->
         {:error, :confirmation_required}
@@ -304,14 +307,16 @@ defmodule HasAWebsite.Accounts do
       !promoter_is_authorised?(promoter) ->
         {:error, :unauthorised}
 
+      is_nil(user) ->
+        {:error, :user_not_found}
+
+      user.role in [:creator, :admin] ->
+        {:error, :has_elevated_role}
+
       true ->
-        case get_user_by_login(promotee_name_or_email) do
-          nil -> {:error, :user_not_found}
-          user ->
-            User.creator_promotion_changeset(promoter, user)
-            |> Repo.update()
-        end
-    end
+        User.creator_promotion_changeset(promoter, user)
+        |> Repo.update()
+      end
   end
 
   defp promoter_is_authorised?(%User{role: :admin}), do: true

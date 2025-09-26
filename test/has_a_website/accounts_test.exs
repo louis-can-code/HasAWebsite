@@ -440,15 +440,12 @@ defmodule HasAWebsite.AccountsTest do
 
     test "can not promote creator", %{admin: admin, user: user} do
       {:ok, creator} = Accounts.promote_to_creator(admin, user.username, confirmation: true)
-      {:error, changeset} = Accounts.promote_to_creator(admin, creator.username, confirmation: true)
+      assert {:error, :has_elevated_role} = Accounts.promote_to_creator(admin, creator.username, confirmation: true)
 
-      assert "already holds an elevated role" in errors_on(changeset).role
     end
 
     test "can not promote admin", %{admin: admin} do
-      {:error, changeset} = Accounts.promote_to_creator(admin, admin.username, confirmation: true)
-
-      assert "already holds an elevated role" in errors_on(changeset).role
+      assert {:error, :has_elevated_role} = Accounts.promote_to_creator(admin, admin.username, confirmation: true)
     end
   end
 

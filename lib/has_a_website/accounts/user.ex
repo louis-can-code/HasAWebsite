@@ -129,8 +129,6 @@ defmodule HasAWebsite.Accounts.User do
   def creator_promotion_changeset(promoter, user) do
     user
     |> change()
-    |> validate_exclusion(:role, [:admin, :creator],
-      message: "already holds an elevated role")
     |> put_change(:role, :creator)
     |> put_change(:promoted_by_id, promoter.id)
     |> put_change(:promoted_at, DateTime.utc_now(:second))
