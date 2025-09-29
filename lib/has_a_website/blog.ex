@@ -32,16 +32,16 @@ defmodule HasAWebsite.Blog do
   end
 
   @doc """
-  Returns the list of posts.
+  Returns the list of all posts.
 
   ## Examples
 
-      iex> list_posts(scope)
+      iex> list_posts()
       [%Post{}, ...]
 
   """
-  def list_posts(%Scope{} = scope) do
-    Repo.all_by(Post, user_id: scope.user.id)
+  def list_posts() do
+    Repo.all(Post)
   end
 
   @doc """
@@ -51,15 +51,47 @@ defmodule HasAWebsite.Blog do
 
   ## Examples
 
-      iex> get_post!(scope, 123)
+      iex> get_post!(123)
       %Post{}
 
-      iex> get_post!(scope, 456)
+      iex> get_post!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_post!(%Scope{} = scope, id) do
-    Repo.get_by!(Post, id: id, user_id: scope.user.id)
+  def get_post!(id) do
+    Repo.get_by!(Post, id: id)
+  end
+
+  @doc """
+  Gets a single post by its slug.
+
+  Returns null if the Post does not exist.
+
+  ## Examples
+
+      iex> get_post_by_slug("post-slug")
+      %Post{}
+
+      iex> get_post_by_slug("unknown-slug")
+      nil
+  """
+  def get_post_by_slug(slug) when is_binary(slug) do
+    Repo.get_by(Post, slug: slug)
+  end
+
+  @doc """
+  Checks if a slug already exists.
+
+  ## Examples
+
+      iex> slug_exists?("existing-post")
+      true
+
+      iex> slug_exists?("not-an-existing-post")
+      false
+  """
+  def slug_exists?(slug) do
+    Repo.exists?(from p in Post, where: p.slug == ^slug)
   end
 
   @doc """
@@ -77,8 +109,9 @@ defmodule HasAWebsite.Blog do
   def create_post(%Scope{} = scope, attrs) do
     with {:ok, post = %Post{}} <-
            %Post{}
-           |> Post.changeset(attrs, scope)
+           |> Post.create_post_changeset(attrs, scope)
            |> Repo.insert() do
+      #TODO: broadcast by user creating post or maybe post tags instead of post updates
       broadcast_post(scope, {:created, post})
       {:ok, post}
     end
@@ -86,6 +119,10 @@ defmodule HasAWebsite.Blog do
 
   @doc """
   Updates a post.
+
+  Ensure the original post is passed in to the `post` parameter.
+
+  For a list of options, check the Post.update_post_changeset/3 documentation.
 
   ## Examples
 
@@ -96,13 +133,14 @@ defmodule HasAWebsite.Blog do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_post(%Scope{} = scope, %Post{} = post, attrs) do
-    true = post.user_id == scope.user.id
+  def update_post(%Scope{} = scope, %Post{} = post, attrs, opts \\ []) do
+    true = post.author_id == scope.user.id
 
     with {:ok, post = %Post{}} <-
            post
-           |> Post.changeset(attrs, scope)
+           |> Post.update_post_changeset(attrs, opts)
            |> Repo.update() do
+      #TODO: broadcasting handling (by user not individual post)
       broadcast_post(scope, {:updated, post})
       {:ok, post}
     end
@@ -121,7 +159,8 @@ defmodule HasAWebsite.Blog do
 
   """
   def delete_post(%Scope{} = scope, %Post{} = post) do
-    true = post.user_id == scope.user.id
+    #TODO: allow admins to delete posts regardless of author
+    true = post.author_id == scope.user.id
 
     with {:ok, post = %Post{}} <-
            Repo.delete(post) do
@@ -139,8 +178,9 @@ defmodule HasAWebsite.Blog do
       %Ecto.Changeset{data: %Post{}}
 
   """
+  #TODO: figure out what is happening here
   def change_post(%Scope{} = scope, %Post{} = post, attrs \\ %{}) do
-    true = post.user_id == scope.user.id
+    true = post.author_id == scope.user.id
 
     Post.changeset(post, attrs, scope)
   end

@@ -3,11 +3,12 @@ defmodule HasAWebsite.Repo.Migrations.CreatePosts do
 
   def change do
     create table(:posts) do
-      add :title, :string, null: false
+      add :title, :citext, null: false
       add :slug, :string, null: false
       add :description, :text, null: false
       add :content, :text, null: false
       add :published_at, :utc_datetime, null: false
+      add :last_updated_at, :utc_datetime
       add :author_id, references(:users, on_delete: :nothing), null: false
 
       timestamps(type: :utc_datetime)
