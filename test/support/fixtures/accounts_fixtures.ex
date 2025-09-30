@@ -63,6 +63,11 @@ defmodule HasAWebsite.AccountsFixtures do
     Scope.for_user(user)
   end
 
+  def admin_scope_fixture do
+    admin = admin_fixture()
+    Scope.for_user(admin)
+  end
+
   def set_password(user) do
     {:ok, {user, _expired_tokens}} =
       Accounts.update_user_password(user, %{password: valid_user_password()})

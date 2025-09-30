@@ -12,8 +12,6 @@ defmodule HasAWebsite.BlogFixtures do
       Enum.into(attrs, %{
         content: "some content",
         description: "some description",
-        published_at: ~U[2025-09-25 13:13:00Z],
-        slug: "some slug",
         title: "some title"
       })
 
