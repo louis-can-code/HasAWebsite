@@ -36,6 +36,7 @@ defmodule HasAWebsite.Blog.Post do
     |> validate_title()
     |> put_change(:user_id, user_scope.user.id)
     |> put_change(:published_at, DateTime.utc_now(:second))
+    |> validate_slug()
     |> unsafe_validate_unique(:slug, Post)
     |> unique_constraint(:slug)
   end
@@ -55,6 +56,15 @@ defmodule HasAWebsite.Blog.Post do
     changeset
     |> validate_format(:title, ~r/^[^\S].*[^\S]$/, message: "can not start or end with whitespace")
     |> validate_length(:title, min: 1, max: 86)
+  end
+
+  defp validate_slug(changeset) do
+    changeset
+    |> validate_format(:slug, ~r/^[a-z0-9-]+$/,
+      message: "can only contain numbers, lowercase letters, and hyphens")
+    |> validate_format(:slug, ~r/^(?!.*--).*$/,
+      message: "can not contain consecutive hyphens")
+    |> validate_length(:slug, max: 86)
   end
 
   defp slug_generator(changeset) do
