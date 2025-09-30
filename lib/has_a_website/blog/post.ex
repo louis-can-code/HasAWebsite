@@ -16,6 +16,15 @@ defmodule HasAWebsite.Blog.Post do
   end
 
   @doc """
+  Default post changeset
+  """
+  def changeset(post, attrs) do
+    post
+    |> cast(attrs, [:title, :slug, :description, :content])
+    |> validate_required([:title, :slug, :description, :content])
+  end
+
+  @doc """
   A changeset for creating a post
 
   If no slug is provided, a unique slug will be generated

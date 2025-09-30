@@ -159,8 +159,7 @@ defmodule HasAWebsite.Blog do
 
   """
   def delete_post(%Scope{} = scope, %Post{} = post) do
-    #TODO: allow admins to delete posts regardless of author
-    true = post.author_id == scope.user.id
+    true = post.author_id == scope.user.id || verify_admin?(scope.user.role)
 
     with {:ok, post = %Post{}} <-
            Repo.delete(post) do
@@ -168,6 +167,9 @@ defmodule HasAWebsite.Blog do
       {:ok, post}
     end
   end
+
+  defp verify_admin?(:admin), do: true
+  defp verify_admin?(_), do: false
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking post changes.
@@ -178,10 +180,9 @@ defmodule HasAWebsite.Blog do
       %Ecto.Changeset{data: %Post{}}
 
   """
-  #TODO: figure out what is happening here
   def change_post(%Scope{} = scope, %Post{} = post, attrs \\ %{}) do
     true = post.author_id == scope.user.id
 
-    Post.changeset(post, attrs, scope)
+    Post.changeset(post, attrs)
   end
 end
