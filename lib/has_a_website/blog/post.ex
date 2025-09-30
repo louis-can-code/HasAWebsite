@@ -8,7 +8,7 @@ defmodule HasAWebsite.Blog.Post do
     field :description, :string
     field :content, :string
     field :published_at, :utc_datetime
-    field :last_update_at, :utc_datetime
+    field :last_updated_at, :utc_datetime
 
     belongs_to :author, HasAWebsite.Accounts.User
 
