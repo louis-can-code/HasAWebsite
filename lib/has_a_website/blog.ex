@@ -4,6 +4,7 @@ defmodule HasAWebsite.Blog do
   """
 
   import Ecto.Query, warn: false
+
   alias HasAWebsite.Repo
 
   alias HasAWebsite.Blog.Post
@@ -95,6 +96,62 @@ defmodule HasAWebsite.Blog do
   end
 
   @doc """
+  Generates a unique slug usign the input
+
+  ## Examples
+
+      iex> generate_slug("Some Title")
+      some-title
+
+      iex> generate_slug("existing-slug")
+      existing-slug-2
+  ##
+  """
+  def generate_slug(title) do
+    title
+    |> title_to_slug()
+    |> unique_slug()
+  end
+
+  defp title_to_slug(title) do
+    title
+    |> String.downcase()
+    |> String.trim()
+    |> String.trim("-")
+    |> String.replace(~r/[^a-z0-9\s-]/, "")
+    |> String.replace(~r/[\s|-]+/, "-")
+  end
+
+  #if the slug is taken
+  #query Post for a list of number iterations of the slug
+  defp unique_slug(base_slug) do
+    pattern = "^#{base_slug}-(\\d+)$"
+
+    if slug_exists?(base_slug) do
+      from(p in Post,
+        where: fragment("? ~ ?", p.slug, ^pattern),
+        select: fragment("substring(? FROM ?)::integer", p.slug, ^pattern)
+      )
+      |> Repo.all()
+      |> find_next_available_slug(base_slug)
+    else
+      base_slug
+    end
+  end
+
+  #find the smallest number for which a slug does not yet exist
+  defp find_next_available_slug([], slug), do: "#{slug}-2"
+  defp find_next_available_slug(number_list, slug) do
+    number_set = MapSet.new(number_list)
+
+    num =
+      Stream.iterate(2, &(&1 + 1))
+      |> Enum.find(&!MapSet.member?(number_set, &1))
+
+    "#{slug}-#{num}"
+  end
+
+  @doc """
   Creates a post.
 
   ## Examples
@@ -107,11 +164,19 @@ defmodule HasAWebsite.Blog do
 
   """
   def create_post(%Scope{} = scope, attrs) do
+    attrs =
+      with true <- !Map.has_key?(attrs, :slug),
+           true <- Map.has_key?(attrs, :title) do
+        Map.put(attrs, :slug, generate_slug(attrs.title))
+      else
+        _ -> attrs
+      end
+
     with {:ok, post = %Post{}} <-
-           %Post{}
-           |> Post.create_post_changeset(attrs, scope)
-           |> Repo.insert() do
-      #TODO: broadcast by user creating post or maybe post tags instead of post updates
+          %Post{}
+          |> Post.create_post_changeset(attrs, scope)
+          |> Repo.insert() do
+      #TODO: broadcast by user creating post
       broadcast_post(scope, {:created, post})
       {:ok, post}
     end
@@ -122,7 +187,9 @@ defmodule HasAWebsite.Blog do
 
   Ensure the original post is passed in to the `post` parameter.
 
-  For a list of options, check the Post.update_post_changeset/3 documentation.
+  ## Options
+    * `:regenerate_slug` - Set to `true` if you want to regenerate
+      the URL slug (generated from the title)
 
   ## Examples
 
@@ -136,14 +203,39 @@ defmodule HasAWebsite.Blog do
   def update_post(%Scope{} = scope, %Post{} = post, attrs, opts \\ []) do
     true = post.author_id == scope.user.id
 
+    attrs = maybe_update_slug(post, attrs, opts)
+
     with {:ok, post = %Post{}} <-
            post
-           |> Post.update_post_changeset(attrs, opts)
+           |> Post.update_post_changeset(attrs)
            |> Repo.update() do
-      #TODO: broadcasting handling (by user not individual post)
+      #TODO: look into broadcasting
       broadcast_post(scope, {:updated, post})
-      {:ok, post}
     end
+  end
+
+  #generates a slug if:
+  # -no new slug was provided
+  # -a new title was provided
+  # -regenerate_slug option was set to true
+  # -generating a slug would change the slug
+  defp maybe_update_slug(post, attrs, opts) do
+    with true <- !Map.has_key?(attrs, :slug),
+         true <- Map.has_key?(attrs, :title),
+         true <- Keyword.get(opts, :regenerate_slug, false),
+         true <- new_title_needs_new_slug?(post.slug, attrs.title) do
+      Map.put(attrs, :slug, generate_slug(attrs.title))
+    else
+      _ -> attrs
+    end
+  end
+
+  #Checks if the new slug would be of the same form as the old slug
+  defp new_title_needs_new_slug?(old_slug, new_title) do
+    base_slug = title_to_slug(new_title)
+    pattern = ~r/^#{base_slug}(-\d+)?$/
+
+    !Regex.match?(pattern, old_slug)
   end
 
   @doc """
