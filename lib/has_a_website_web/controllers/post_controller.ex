@@ -5,7 +5,7 @@ defmodule HasAWebsiteWeb.PostController do
   alias HasAWebsite.Blog.Post
 
   def index(conn, _params) do
-    posts = Blog.list_posts(conn.assigns.current_scope)
+    posts = Blog.list_posts()
     render(conn, :index, posts: posts)
   end
 
@@ -31,18 +31,18 @@ defmodule HasAWebsiteWeb.PostController do
   end
 
   def show(conn, %{"id" => id}) do
-    post = Blog.get_post!(conn.assigns.current_scope, id)
+    post = Blog.get_post!(id)
     render(conn, :show, post: post)
   end
 
   def edit(conn, %{"id" => id}) do
-    post = Blog.get_post!(conn.assigns.current_scope, id)
+    post = Blog.get_post!(id)
     changeset = Blog.change_post(conn.assigns.current_scope, post)
     render(conn, :edit, post: post, changeset: changeset)
   end
 
   def update(conn, %{"id" => id, "post" => post_params}) do
-    post = Blog.get_post!(conn.assigns.current_scope, id)
+    post = Blog.get_post!(id)
 
     case Blog.update_post(conn.assigns.current_scope, post, post_params) do
       {:ok, post} ->
@@ -56,7 +56,7 @@ defmodule HasAWebsiteWeb.PostController do
   end
 
   def delete(conn, %{"id" => id}) do
-    post = Blog.get_post!(conn.assigns.current_scope, id)
+    post = Blog.get_post!(id)
     {:ok, _post} = Blog.delete_post(conn.assigns.current_scope, post)
 
     conn
