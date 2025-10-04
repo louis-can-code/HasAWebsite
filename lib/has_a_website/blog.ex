@@ -185,7 +185,8 @@ defmodule HasAWebsite.Blog do
   @doc """
   Updates a post.
 
-  Ensure the original post is passed in to the `post` parameter.
+  Ensure the original post is passed in to the `post` parameter,
+  and that it is the default value on the update form.
 
   ## Options
     * `:regenerate_slug` - Set to `true` if you want to regenerate
@@ -211,6 +212,7 @@ defmodule HasAWebsite.Blog do
            |> Repo.update() do
       #TODO: look into broadcasting
       broadcast_post(scope, {:updated, post})
+      {:ok, post}
     end
   end
 

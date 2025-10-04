@@ -9,7 +9,7 @@ defmodule HasAWebsite.BlogTest do
   import HasAWebsite.AccountsFixtures, only: [user_scope_fixture: 0, admin_scope_fixture: 0]
   import HasAWebsite.BlogFixtures
 
-  @invalid_attrs %{description: nil, title: nil, slug: nil, content: nil, published_at: nil}
+  @invalid_attrs %{description: nil, title: nil, slug: nil, content: nil}
 
   describe "list_post/0" do
     test "returns all posts" do
@@ -55,7 +55,7 @@ defmodule HasAWebsite.BlogTest do
       assert {:ok, %Post{} = post} = Blog.create_post(scope, valid_attrs)
       assert post.description == "some description"
       assert post.title == "some cool title"
-      assert post.slug == "some-cool-slug"
+      assert post.slug == "some-cool-title"
       assert post.content == "some content"
       assert !is_nil(post.published_at)
       assert post.author_id == scope.user.id
@@ -98,7 +98,7 @@ defmodule HasAWebsite.BlogTest do
       scope = user_scope_fixture()
       {:ok, _post} = Blog.create_post(scope, valid_attrs)
       post = post_fixture(scope)
-      update_attrs = %{title: "some slug", slug: "some-slug"}
+      update_attrs = %{valid_attrs | title: "some slug", slug: "some-slug"}
 
       assert {:error, %Ecto.Changeset{}} = Blog.update_post(scope, post, update_attrs)
     end
@@ -106,7 +106,7 @@ defmodule HasAWebsite.BlogTest do
     test "regenerate_slug set to true regenerates the slug" do
       scope = user_scope_fixture()
       post = post_fixture(scope)
-      update_attrs = %{title: "new title"}
+      update_attrs = %{title: "new title", description: post.description, content: post.content}
 
       assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
       assert post.slug == "new-title"
@@ -115,7 +115,7 @@ defmodule HasAWebsite.BlogTest do
     test "regenerate_slug does not regenerate if a new slug is provided" do
       scope = user_scope_fixture()
       post = post_fixture(scope)
-      update_attrs = %{title: "new title", slug: "another-slug"}
+      update_attrs = %{title: "new title", slug: "another-slug", description: post.description, content: post.content}
 
       assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
       assert post.slug == "another-slug"
@@ -126,7 +126,7 @@ defmodule HasAWebsite.BlogTest do
       scope = user_scope_fixture()
       {:ok, _post} = Blog.create_post(scope, valid_attrs)
       post = post_fixture(scope)
-      update_attrs = %{title: "some slug"}
+      update_attrs = %{title: "some slug", description: post.description, content: post.content}
 
       assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
       assert post.slug != "some-slug"
@@ -146,7 +146,7 @@ defmodule HasAWebsite.BlogTest do
       scope = user_scope_fixture()
       post = post_fixture(scope)
       assert {:error, %Ecto.Changeset{}} = Blog.update_post(scope, post, @invalid_attrs)
-      assert post == Blog.get_post!(scope, post.id)
+      assert post == Blog.get_post!(post.id)
     end
   end
 
@@ -155,7 +155,7 @@ defmodule HasAWebsite.BlogTest do
       scope = user_scope_fixture()
       post = post_fixture(scope)
       assert {:ok, %Post{}} = Blog.delete_post(scope, post)
-      assert_raise Ecto.NoResultsError, fn -> Blog.get_post!(scope, post.id) end
+      assert_raise Ecto.NoResultsError, fn -> Blog.get_post!(post.id) end
     end
 
     test "invalid scope raises an error" do
@@ -170,7 +170,7 @@ defmodule HasAWebsite.BlogTest do
       admin_scope = admin_scope_fixture()
 
       assert {:ok, %Post{}} = Blog.delete_post(admin_scope, post)
-      assert_raise Ecto.NoResultsError, fn -> Blog.get_post!(admin_scope, post.id) end
+      assert_raise Ecto.NoResultsError, fn -> Blog.get_post!(post.id) end
     end
   end
 

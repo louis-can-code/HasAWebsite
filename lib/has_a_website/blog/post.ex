@@ -41,7 +41,7 @@ defmodule HasAWebsite.Blog.Post do
 
   defp validate_title(changeset) do
     changeset
-    |> validate_format(:title, ~r/^[^\S].*[^\S]$/, message: "can not start or end with whitespace")
+    |> validate_format(:title, ~r/^[^\s].*[^\s]$/, message: "can not start or end with whitespace")
     |> validate_length(:title, min: 1, max: 86)
   end
 
@@ -54,7 +54,7 @@ defmodule HasAWebsite.Blog.Post do
     |> validate_format(:slug, ~r/^[^-].*[^-]$/,
       message: "can not start/end with a hyphen")
     |> validate_length(:slug, max: 86)
-    |> unsafe_validate_unique(:slug, Post)
+    |> unsafe_validate_unique(:slug, HasAWebsite.Repo)
     |> unique_constraint(:slug)
   end
 
@@ -67,8 +67,9 @@ defmodule HasAWebsite.Blog.Post do
     changeset =
       post
       |> cast(attrs, [:title, :slug, :description, :content])
+      |> validate_required([:title, :slug, :description, :content])
       |> validate_title()
-      |> validate_length(:description, max: 256)
+      |> validate_length(:description, min: 1, max: 256)
       |> put_change(:last_updated_at, DateTime.utc_now(:second))
 
     if changeset.data.slug != get_field(changeset, :slug) do
