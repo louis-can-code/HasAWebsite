@@ -67,7 +67,7 @@ defmodule HasAWebsite.Blog.Post do
     changeset =
       post
       |> cast(attrs, [:title, :slug, :description, :content])
-      |> validate_required([:title, :slug, :description, :content])
+      |> validate_not_null([:title, :slug, :description, :content])
       |> validate_title()
       |> validate_length(:description, min: 1, max: 256)
       |> put_change(:last_updated_at, DateTime.utc_now(:second))
@@ -77,5 +77,15 @@ defmodule HasAWebsite.Blog.Post do
     else
       changeset
     end
+  end
+
+  defp validate_not_null(changeset, fields) do
+    Enum.reduce(fields, changeset, fn field, set ->
+      if get_change(set, field, :no_change) == nil do
+        add_error(set, field, "can not be null")
+      else
+        set
+      end
+    end)
   end
 end

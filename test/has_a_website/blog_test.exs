@@ -98,7 +98,7 @@ defmodule HasAWebsite.BlogTest do
       scope = user_scope_fixture()
       {:ok, _post} = Blog.create_post(scope, valid_attrs)
       post = post_fixture(scope)
-      update_attrs = %{valid_attrs | title: "some slug", slug: "some-slug"}
+      update_attrs = %{title: "some slug", slug: "some-slug"}
 
       assert {:error, %Ecto.Changeset{}} = Blog.update_post(scope, post, update_attrs)
     end
@@ -106,7 +106,7 @@ defmodule HasAWebsite.BlogTest do
     test "regenerate_slug set to true regenerates the slug" do
       scope = user_scope_fixture()
       post = post_fixture(scope)
-      update_attrs = %{title: "new title", description: post.description, content: post.content}
+      update_attrs = %{title: "new title"}
 
       assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
       assert post.slug == "new-title"
@@ -115,7 +115,7 @@ defmodule HasAWebsite.BlogTest do
     test "regenerate_slug does not regenerate if a new slug is provided" do
       scope = user_scope_fixture()
       post = post_fixture(scope)
-      update_attrs = %{title: "new title", slug: "another-slug", description: post.description, content: post.content}
+      update_attrs = %{title: "new title", slug: "another-slug"}
 
       assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
       assert post.slug == "another-slug"
@@ -126,7 +126,7 @@ defmodule HasAWebsite.BlogTest do
       scope = user_scope_fixture()
       {:ok, _post} = Blog.create_post(scope, valid_attrs)
       post = post_fixture(scope)
-      update_attrs = %{title: "some slug", description: post.description, content: post.content}
+      update_attrs = %{title: "some slug"}
 
       assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
       assert post.slug != "some-slug"
