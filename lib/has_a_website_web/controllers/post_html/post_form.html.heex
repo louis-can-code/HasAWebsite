@@ -3,7 +3,6 @@
   <.input field={f[:slug]} type="text" label="Slug" />
   <.input field={f[:description]} type="textarea" label="Description" />
   <.input field={f[:content]} type="textarea" label="Content" />
-  <.input field={f[:published_at]} type="datetime-local" label="Published at" />
   <footer>
     <.button variant="primary">Save Post</.button>
     <.button :if={@return_to} href={@return_to}>Cancel</.button>

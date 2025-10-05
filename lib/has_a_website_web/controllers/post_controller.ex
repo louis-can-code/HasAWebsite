@@ -23,20 +23,20 @@ defmodule HasAWebsiteWeb.PostController do
       {:ok, post} ->
         conn
         |> put_flash(:info, "Post created successfully.")
-        |> redirect(to: ~p"/posts/#{post}")
+        |> redirect(to: ~p"/posts/#{post.slug}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, :new, changeset: changeset)
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    post = Blog.get_post!(id)
+  def show(conn, %{"slug" => slug}) do
+    post = Blog.get_post_by_slug(slug)
     render(conn, :show, post: post)
   end
 
-  def edit(conn, %{"id" => id}) do
-    post = Blog.get_post!(id)
+  def edit(conn, %{"slug" => slug}) do
+    post = Blog.get_post_by_slug(slug)
     changeset = Blog.change_post(conn.assigns.current_scope, post)
     render(conn, :edit, post: post, changeset: changeset)
   end
@@ -48,15 +48,15 @@ defmodule HasAWebsiteWeb.PostController do
       {:ok, post} ->
         conn
         |> put_flash(:info, "Post updated successfully.")
-        |> redirect(to: ~p"/posts/#{post}")
+        |> redirect(to: ~p"/posts/#{post.slug}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, :edit, post: post, changeset: changeset)
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    post = Blog.get_post!(id)
+  def delete(conn, %{"slug" => slug}) do
+    post = Blog.get_post_by_slug(slug)
     {:ok, _post} = Blog.delete_post(conn.assigns.current_scope, post)
 
     conn
