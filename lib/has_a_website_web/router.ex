@@ -13,6 +13,14 @@ defmodule HasAWebsiteWeb.Router do
     plug :fetch_current_scope_for_user
   end
 
+  pipeline :admin do
+    plug HasAWebsiteWeb.Plugs.EnsureRole, :admin
+  end
+
+  pipeline :creator do
+    plug HasAWebsiteWeb.Plugs.EnsureRole, [:creator, :admin]
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -65,9 +73,21 @@ defmodule HasAWebsiteWeb.Router do
   scope "/", HasAWebsiteWeb do
     pipe_through [:browser]
 
+    # Authentication routes
     get "/users/log-in", UserSessionController, :new
     get "/users/log-in/:token", UserSessionController, :confirm
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+
+    # Public post routes
+    get "/posts", PostController, :index
+    get "/posts/:slug", PostController, :show
+  end
+
+  scope "/", HasAWebsiteWeb do
+    pipe_through [:browser, :creator]
+
+    # Protected post routes
+    resources "/posts", PostController, except: [:index, :show], param: "slug"
   end
 end
