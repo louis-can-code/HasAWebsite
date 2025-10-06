@@ -11,13 +11,17 @@ defmodule HasAWebsite.BlogTest do
 
   @invalid_attrs %{description: nil, title: nil, slug: nil, content: nil}
 
-  describe "list_post/0" do
+  describe "list_post/1" do
     test "returns all posts" do
       scope = user_scope_fixture()
       other_scope = user_scope_fixture()
       post = post_fixture(scope)
       other_post = post_fixture(other_scope)
       assert Blog.list_posts() == [post, other_post]
+    end
+
+    test "returns all post, with author details" do
+      #TODO: this test
     end
   end
 
@@ -26,6 +30,21 @@ defmodule HasAWebsite.BlogTest do
       scope = user_scope_fixture()
       post = post_fixture(scope)
       assert Blog.get_post!(post.id) == post
+    end
+  end
+
+  describe "get_post_by_slug" do
+    test "returns the post with given slug" do
+      scope = user_scope_fixture()
+      post = post_fixture(scope)
+      assert Blog.get_post_by_slug(post.slug) == post
+    end
+
+    test "returns the post and author details" do
+      scope = user_scope_fixture()
+      post = post_fixture(scope)
+      get_post = Blog.get_post_by_slug(post.slug, preloads: [:author])
+      assert get_post.author.id == scope.user.id
     end
   end
 

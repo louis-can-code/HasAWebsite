@@ -90,7 +90,7 @@ defmodule HasAWebsite.Blog do
       %Post{}
 
       iex> get_post_by_slug!("post-slug", preloads: [:author])
-      [%Post{author: %User{}}, ...]
+      %Post{author: %User{}}
 
       iex> get_post_by_slug!("unknown-slug")
       nil
@@ -100,7 +100,7 @@ defmodule HasAWebsite.Blog do
 
     Post
     |> preload(^preloads)
-    |> Repo.get_by(Post, slug: slug)
+    |> Repo.get_by(slug: slug)
   end
 
   @doc """
