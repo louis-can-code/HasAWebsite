@@ -73,21 +73,27 @@ defmodule HasAWebsiteWeb.Router do
   scope "/", HasAWebsiteWeb do
     pipe_through [:browser]
 
-    # Authentication routes
     get "/users/log-in", UserSessionController, :new
     get "/users/log-in/:token", UserSessionController, :confirm
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
-
-    # Public post routes
-    get "/posts", PostController, :index
-    get "/posts/:slug", PostController, :show
   end
 
-  scope "/", HasAWebsiteWeb do
+
+  ## Blog routes
+
+  # public (viewing posts)
+  scope "/posts", HasAWebsiteWeb do
+    pipe_through [:browser]
+
+    get "/", PostController, :index
+    get "/:slug", PostController, :show
+  end
+
+  # role-based access (managing posts)
+  scope "/posts", HasAWebsiteWeb do
     pipe_through [:browser, :creator]
 
-    # Protected post routes
-    resources "/posts", PostController, except: [:index, :show], param: "slug"
+    resources "/", PostController, except: [:index, :show], param: "slug"
   end
 end
