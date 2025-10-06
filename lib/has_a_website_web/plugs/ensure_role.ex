@@ -42,7 +42,7 @@ defmodule HasAWebsiteWeb.Plugs.EnsureRole do
   defp maybe_halt(_, conn) do
     conn
     |> Controller.put_flash(:error, "Unauthorised")
-    |> Controller.redirect(ro: signed_in_path(conn))
+    |> Controller.redirect(to: signed_in_path(conn))
     |> halt()
   end
 

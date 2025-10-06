@@ -21,7 +21,6 @@ defmodule HasAWebsite.Blog.Post do
   def changeset(post, attrs) do
     post
     |> cast(attrs, [:title, :slug, :description, :content])
-    |> validate_required([:title, :slug, :description, :content])
   end
 
   @doc """

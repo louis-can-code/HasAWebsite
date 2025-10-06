@@ -10,14 +10,14 @@ defmodule HasAWebsiteWeb.Roles do
   @type action :: :new | :edit | :delete
 
   @spec can?(User.t(), entity(), action()) :: boolean()
-  def can?(%User{role: :admin}, %Post{}, :new), do: true
-  def can?(%User{role: :creator}, %Post{}, :new), do: true
+  def can?(%User{role: :admin}, %Post{}, :new), do: :ok
+  def can?(%User{role: :creator}, %Post{}, :new), do: :ok
 
-  def can?(%User{role: :admin, id: id}, %Post{author_id: id}, :edit), do: true
-  def can?(%User{role: :creator, id: id}, %Post{author_id: id}, :edit), do: true
+  def can?(%User{role: :admin, id: id}, %Post{author_id: id}, :edit), do: :ok
+  def can?(%User{role: :creator, id: id}, %Post{author_id: id}, :edit), do: :ok
 
-  def can?(%User{role: :admin}, %Post{}, :delete), do: true
-  def can?(%User{role: :creator, id: id}, %Post{author_id: id}, :delete), do: true
+  def can?(%User{role: :admin}, %Post{}, :delete), do: :ok
+  def can?(%User{role: :creator, id: id}, %Post{author_id: id}, :delete), do: :ok
 
-  def can?(_user, _entity, _action), do: false
+  def can?(_user, _entity, _action), do: {:error, :unauthorised}
 end

@@ -35,14 +35,25 @@ defmodule HasAWebsite.Blog do
   @doc """
   Returns the list of all posts.
 
+  ## Options
+    * `preloads` - takes a list of atoms:
+      - `:author` to preload the associated author
+
   ## Examples
 
       iex> list_posts()
       [%Post{}, ...]
 
+      iex> list_posts([:author])
+      [%Post{author: %User{}}, ...]
+
   """
-  def list_posts() do
-    Repo.all(Post)
+  def list_posts(opts \\ []) do
+    preloads = Keyword.get(opts, :preloads, [])
+    Post
+    |> order_by(desc: :published_at)
+    |> preload(^preloads)
+    |> Repo.all()
   end
 
   @doc """
@@ -66,18 +77,30 @@ defmodule HasAWebsite.Blog do
   @doc """
   Gets a single post by its slug.
 
-  Returns null if the Post does not exist.
+  Returns nil if the Post does not exist.
+
+  ## Options
+    * `:preloads` - takes a list of atoms:
+      - `:author` to preload the associated author
+
 
   ## Examples
 
-      iex> get_post_by_slug("post-slug")
+      iex> get_post_by_slug!("post-slug")
       %Post{}
 
-      iex> get_post_by_slug("unknown-slug")
+      iex> get_post_by_slug!("post-slug", preloads: [:author])
+      [%Post{author: %User{}}, ...]
+
+      iex> get_post_by_slug!("unknown-slug")
       nil
   """
-  def get_post_by_slug(slug) when is_binary(slug) do
-    Repo.get_by(Post, slug: slug)
+  def get_post_by_slug(slug, opts \\ []) when is_binary(slug) do
+    preloads = Keyword.get(opts, :preloads, [])
+
+    Post
+    |> preload(^preloads)
+    |> Repo.get_by(Post, slug: slug)
   end
 
   @doc """
