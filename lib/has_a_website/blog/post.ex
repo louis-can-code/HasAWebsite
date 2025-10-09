@@ -2,6 +2,25 @@ defmodule HasAWebsite.Blog.Post do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{
+          # Required fields
+          id: integer(),
+          title: String.t(),
+          slug: String.t(),
+          description: String.t(),
+          content: String.t(),
+          published_at: DateTime.t(),
+          last_updated_at: DateTime.t(),
+          author_id: integer(),
+
+          # Associations
+          author: HasAWebsite.Accounts.User.t() | Ecto.Association.NotLoaded.t(),
+
+          # Timestamps
+          inserted_at: DateTime.t(),
+          updated_at: DateTime.t()
+        }
+
   schema "posts" do
     field :title, :string
     field :slug, :string
@@ -40,18 +59,19 @@ defmodule HasAWebsite.Blog.Post do
 
   defp validate_title(changeset) do
     changeset
-    |> validate_format(:title, ~r/^[^\s].*[^\s]$/, message: "can not start or end with whitespace")
+    |> validate_format(:title, ~r/^[^\s].*[^\s]$/,
+      message: "can not start or end with whitespace"
+    )
     |> validate_length(:title, min: 1, max: 86)
   end
 
   defp validate_slug(changeset) do
     changeset
     |> validate_format(:slug, ~r/^[a-z0-9-]+$/,
-      message: "can only contain numbers, lowercase letters, and hyphens")
-    |> validate_format(:slug, ~r/^(?!.*--).*$/,
-      message: "can not contain consecutive hyphens")
-    |> validate_format(:slug, ~r/^[^-].*[^-]$/,
-      message: "can not start/end with a hyphen")
+      message: "can only contain numbers, lowercase letters, and hyphens"
+    )
+    |> validate_format(:slug, ~r/^(?!.*--).*$/, message: "can not contain consecutive hyphens")
+    |> validate_format(:slug, ~r/^[^-].*[^-]$/, message: "can not start/end with a hyphen")
     |> validate_length(:slug, max: 86)
     |> unsafe_validate_unique(:slug, HasAWebsite.Repo)
     |> unique_constraint(:slug)

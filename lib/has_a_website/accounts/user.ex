@@ -2,6 +2,32 @@ defmodule HasAWebsite.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{
+          # Required fields
+          id: integer(),
+          email: String.t(),
+          username: String.t(),
+          role: atom(),
+          confirmed_at: DateTime.t(),
+
+          # Nullable fields
+          promoted_at: DateTime.t() | nil,
+          promoted_by_id: integer() | nil,
+
+          # Virtual fields
+          password: String.t() | nil,
+          hashed_password: String.t() | nil,
+          authenticated_at: DateTime.t() | nil,
+
+          # Associations
+          promoted_by: __MODULE__.t() | Ecto.Association.NotLoaded.t() | nil,
+          posts: [HasAWebsite.Blog.Post.t()] | Ecto.Association.NotLoaded.t() | nil,
+
+          # Timestamps
+          inserted_at: DateTime.t(),
+          updated_at: DateTime.t()
+        }
+
   schema "users" do
     field :email, :string
     field :username, :string
@@ -46,28 +72,31 @@ defmodule HasAWebsite.Accounts.User do
       |> validate_required([:username])
       |> validate_length(:username, min: 3, max: 36)
       |> validate_format(:username, ~r/^[a-z0-9_-]+$/i,
-        message: "can only contain numbers, letters, underscores, and/or hyphens")
+        message: "can only contain numbers, letters, underscores, and/or hyphens"
+      )
       |> validate_format(:username, ~r/^[a-z0-9][a-z0-9_-]*[a-z0-9]$/i,
-        message: "must not start or end with a hyphen or underscore")
+        message: "must not start or end with a hyphen or underscore"
+      )
       |> validate_format(:username, ~r/^(?!.*[_-][_-]).*$/,
-        message: "can not contain consecutive special characters")
-      |> validate_format(:username, ~r/^[^\s]*$/,
-        message: "can not contain whitespace")
+        message: "can not contain consecutive special characters"
+      )
+      |> validate_format(:username, ~r/^[^\s]*$/, message: "can not contain whitespace")
       |> validate_change(:username, fn :username, username ->
-          if Enum.any?(@reserved_usernames, &(String.downcase(username) == &1)) do
-            [username: "username is reserved"]
-          else
-            []
-          end
-        end)
+        if Enum.any?(@reserved_usernames, &(String.downcase(username) == &1)) do
+          [username: "username is reserved"]
+        else
+          []
+        end
+      end)
 
     original_username = changeset.data.username
     new_username = get_field(changeset, :username)
 
-    #maintains case insensitive unique constraint, while allowing users
-    #to change the case of their own username
+    # maintains case insensitive unique constraint, while allowing users
+    # to change the case of their own username
     cond do
-      is_nil(original_username) || String.downcase(original_username) != String.downcase(new_username) ->
+      is_nil(original_username) ||
+          String.downcase(original_username) != String.downcase(new_username) ->
         changeset
         |> unsafe_validate_unique(:username, HasAWebsite.Repo)
         |> unique_constraint(:username)
@@ -79,7 +108,6 @@ defmodule HasAWebsite.Accounts.User do
         changeset
     end
   end
-
 
   @doc """
   A user changeset for changing the email.
@@ -190,7 +218,9 @@ defmodule HasAWebsite.Accounts.User do
     |> validate_length(:password, min: 12, max: 72)
     |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
     |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
-    |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
+    |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/,
+      message: "at least one digit or punctuation character"
+    )
     |> maybe_hash_password(opts)
   end
 
