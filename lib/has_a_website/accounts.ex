@@ -104,6 +104,7 @@ defmodule HasAWebsite.Accounts do
       else
         Repo.get_by(User, username: login)
       end
+
     if User.valid_password?(user, password), do: user
   end
 
@@ -140,6 +141,23 @@ defmodule HasAWebsite.Accounts do
   def register_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Registers a creator
+
+  ## Examples
+      iex> register_creator(%{field: value})
+      {:ok, %User{}}
+
+      iex> register_admin(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def register_creator(attrs) do
+    %User{}
+    |> User.creator_registration_changeset(attrs)
     |> Repo.insert()
   end
 
@@ -291,12 +309,12 @@ defmodule HasAWebsite.Accounts do
       {:error, :confirmation_required}
   """
   @spec promote_to_creator(User.t(), String.t(), keyword()) ::
-    {:ok, User.t()}
-    | {:error, :unauthorised}
-    | {:error, :confirmation_required}
-    | {:error, :user_not_found}
-    | {:error, :already_elevated}
-    | {:error, Ecto.Changeset.t()}
+          {:ok, User.t()}
+          | {:error, :unauthorised}
+          | {:error, :confirmation_required}
+          | {:error, :user_not_found}
+          | {:error, :already_elevated}
+          | {:error, Ecto.Changeset.t()}
   def promote_to_creator(promoter, promotee_name_or_email, opts \\ []) do
     user = get_user_by_login(promotee_name_or_email)
 
@@ -316,7 +334,7 @@ defmodule HasAWebsite.Accounts do
       true ->
         User.creator_promotion_changeset(promoter, user)
         |> Repo.update()
-      end
+    end
   end
 
   defp promoter_is_authorised?(%User{role: :admin}), do: true

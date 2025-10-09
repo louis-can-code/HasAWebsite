@@ -166,6 +166,20 @@ defmodule HasAWebsite.Accounts.User do
   end
 
   @doc """
+  A user changeset for registering creators
+  """
+  def admin_registration_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email, :password, :username])
+    |> validate_required([:email, :password, :username])
+    |> validate_email(opts)
+    |> validate_user_username()
+    |> validate_confirmation(:password, message: "does not match password")
+    |> validate_password(opts)
+    |> put_change(:role, :creator)
+  end
+
+  @doc """
   A user changeset for registering admins
   """
   def admin_registration_changeset(user, attrs, opts \\ []) do
