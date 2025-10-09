@@ -24,7 +24,7 @@ defmodule HasAWebsiteWeb.Plugs.EnsureRole do
   @doc false
   @spec call(Conn.t(), atom() | [atom()]) :: Conn.t()
   def call(conn, roles) do
-    user_token = get_session(conn)
+    user_token = get_session(conn, :user_token)
 
     (user_token &&
       Accounts.get_user_by_session_token(user_token))
@@ -46,6 +46,5 @@ defmodule HasAWebsiteWeb.Plugs.EnsureRole do
     |> halt()
   end
 
-  #TODO: customise unauthorised access redirects
   defp signed_in_path(_conn), do: "/"
 end
