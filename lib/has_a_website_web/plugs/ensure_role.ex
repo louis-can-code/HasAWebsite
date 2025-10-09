@@ -22,7 +22,7 @@ defmodule HasAWebsiteWeb.Plugs.EnsureRole do
   def init(default), do: default
 
   @doc false
-  @spec call(Conn.t(), atom() | [atom()]) :: Conn.t()
+  @spec call(Plug.Conn.t(), atom() | [atom()]) :: Plug.Conn.t()
   def call(conn, roles) do
     user_token = get_session(conn, :user_token)
 

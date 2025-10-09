@@ -9,7 +9,7 @@ defmodule HasAWebsiteWeb.Roles do
   @type entity :: struct()
   @type action :: :new | :edit | :delete
 
-  @spec can?(User.t(), entity(), action()) :: boolean()
+  @spec can?(User.t(), entity(), action()) :: :ok | {:error, :unauthorised}
   def can?(%User{role: :admin}, %Post{}, :new), do: :ok
   def can?(%User{role: :creator}, %Post{}, :new), do: :ok
 
