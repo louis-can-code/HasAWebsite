@@ -89,6 +89,10 @@ defmodule HasAWebsite.Blog.Post do
     |> validate_length(:title, min: 1, max: 86)
   end
 
+  @reserved_slugs ~w(
+    new index create delete show edit settings login log-in
+    logout log-out dashboard register
+    )
   defp validate_slug(changeset) do
     changeset
     |> validate_format(:slug, ~r/^[a-z0-9-]+$/,
@@ -96,6 +100,7 @@ defmodule HasAWebsite.Blog.Post do
     )
     |> validate_format(:slug, ~r/^(?!.*--).*$/, message: "can not contain consecutive hyphens")
     |> validate_format(:slug, ~r/^[^-].*[^-]$/, message: "can not start/end with a hyphen")
+    |> validate_exclusion(:slug, @reserved_slugs, message: "slug is reserved")
     |> validate_length(:slug, max: 86)
     |> unsafe_validate_unique(:slug, HasAWebsite.Repo)
     |> unique_constraint(:slug)

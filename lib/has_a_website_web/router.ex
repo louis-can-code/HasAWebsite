@@ -81,18 +81,18 @@ defmodule HasAWebsiteWeb.Router do
 
   ## Blog routes
 
+  # Role-based access (managing posts)
+  scope "/posts", HasAWebsiteWeb do
+    pipe_through [:browser, :require_authenticated_user, :creator]
+
+    resources "/", PostController, except: [:index, :show], param: "slug"
+  end
+
   # public (viewing posts)
   scope "/posts", HasAWebsiteWeb do
     pipe_through [:browser]
 
     get "/", PostController, :index
     get "/:slug", PostController, :show
-  end
-
-  # Role-based access (managing posts)
-  scope "/posts", HasAWebsiteWeb do
-    pipe_through [:browser, :require_authenticated_user, :creator]
-
-    resources "/", PostController, except: [:index, :show], param: "slug"
   end
 end
