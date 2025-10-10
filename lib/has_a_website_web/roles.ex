@@ -7,17 +7,19 @@ defmodule HasAWebsiteWeb.Roles do
   alias HasAWebsite.Blog.Post
 
   @type entity :: struct()
-  @type action :: :new | :edit | :delete
+  @type action :: :new | :create | :edit | :delete | :update
 
-  @spec can?(User.t(), entity(), action()) :: :ok | {:error, :unauthorised}
-  def can?(%User{role: :admin}, %Post{}, :new), do: :ok
-  def can?(%User{role: :creator}, %Post{}, :new), do: :ok
+  @spec authorise(User.t(), entity(), action()) :: :ok | {:error, :unauthorised}
+  def authorise(%User{role: role}, %Post{}, action)
+      when role in [:creator, :admin] and action in [:new, :create],
+      do: :ok
 
-  def can?(%User{role: :admin, id: id}, %Post{author_id: id}, :edit), do: :ok
-  def can?(%User{role: :creator, id: id}, %Post{author_id: id}, :edit), do: :ok
+  def authorise(%User{role: role, id: id}, %Post{author_id: id}, action)
+      when role in [:creator, :admin] and action in [:edit, :update],
+      do: :ok
 
-  def can?(%User{role: :admin}, %Post{}, :delete), do: :ok
-  def can?(%User{role: :creator, id: id}, %Post{author_id: id}, :delete), do: :ok
+  def authorise(%User{role: :admin}, %Post{}, :delete), do: :ok
+  def authorise(%User{role: :creator, id: id}, %Post{author_id: id}, :delete), do: :ok
 
-  def can?(_user, _entity, _action), do: {:error, :unauthorised}
+  def authorise(_user, _entity, _action), do: {:error, :unauthorised}
 end
