@@ -21,14 +21,25 @@ defmodule HasAWebsite.AccountsFixtures do
   end
 
   def admin_fixture() do
-    {:ok, admin} = Accounts.register_admin(
-      %{
+    {:ok, admin} =
+      Accounts.register_admin(%{
         username: unique_user_username(),
         email: unique_user_email(),
         password: valid_user_password()
-      }
-    )
+      })
+
     admin
+  end
+
+  def creator_fixture() do
+    {:ok, creator} =
+      Accounts.register_creator(%{
+        username: unique_user_username(),
+        email: unique_user_email(),
+        password: valid_user_password()
+      })
+
+    creator
   end
 
   def unconfirmed_user_fixture(attrs \\ %{}) do
@@ -61,6 +72,11 @@ defmodule HasAWebsite.AccountsFixtures do
 
   def user_scope_fixture(user) do
     Scope.for_user(user)
+  end
+
+  def creator_scope_fixture do
+    creator = creator_fixture()
+    Scope.for_user(creator)
   end
 
   def admin_scope_fixture do

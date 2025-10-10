@@ -57,6 +57,26 @@ defmodule HasAWebsiteWeb.ConnCase do
   end
 
   @doc """
+  Setup helper that registers and logs in users with the creator role.
+
+      setup :register_and_log_in_creator
+
+  It stores an updated connection and a registered user in the
+  test context.
+  """
+  def register_and_log_in_creator(%{conn: conn} = context) do
+    creator = HasAWebsite.AccountsFixtures.creator_fixture()
+    scope = HasAWebsite.Accounts.Scope.for_user(creator)
+
+    opts =
+      context
+      |> Map.take([:token_authenticated_at])
+      |> Enum.into([])
+
+    %{conn: log_in_user(conn, creator, opts), user: creator, scope: scope}
+  end
+
+  @doc """
   Logs the given `user` into the `conn`.
 
   It returns an updated `conn`.
