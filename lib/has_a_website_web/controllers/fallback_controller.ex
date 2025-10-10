@@ -2,7 +2,7 @@ defmodule HasAWebsiteWeb.FallbackController do
   use HasAWebsiteWeb, :controller
 
   def call(conn, {:error, :unauthorised}) do
-    if conn.scope.current_user do
+    if conn.assigns.current_scope && conn.assigns.current_scope.user do
       conn
       |> put_status(:forbidden)
       |> put_view(HasAWebsiteWeb.ErrorHTML)
