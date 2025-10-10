@@ -79,7 +79,6 @@ defmodule HasAWebsiteWeb.Router do
     delete "/users/log-out", UserSessionController, :delete
   end
 
-
   ## Blog routes
 
   # public (viewing posts)
@@ -92,7 +91,7 @@ defmodule HasAWebsiteWeb.Router do
 
   # role-based access (managing posts)
   scope "/posts", HasAWebsiteWeb do
-    pipe_through [:browser, :creator]
+    pipe_through [:browser, :require_authenticated_user, :creator]
 
     resources "/", PostController, except: [:index, :show], param: "slug"
   end
