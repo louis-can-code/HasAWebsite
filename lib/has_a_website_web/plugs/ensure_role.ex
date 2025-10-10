@@ -33,6 +33,8 @@ defmodule HasAWebsiteWeb.Plugs.EnsureRole do
     |> maybe_halt(conn)
   end
 
+  # Ignore {:error, :not_found} case as user_token would be nil, so first parameter would be false
+  @spec has_role?({User.t(), DateTime.t()} | User.t() | false, [atom()] | atom()) :: boolean()
   defp has_role?({%User{} = user, _token_inserted_at}, roles) when is_list(roles) do
     Enum.any?(roles, &has_role?(user, &1))
   end
@@ -41,6 +43,7 @@ defmodule HasAWebsiteWeb.Plugs.EnsureRole do
 
   defp has_role?(_user_or_false, _role), do: false
 
+  @spec maybe_halt(boolean(), Plug.Conn.t()) :: Plug.Conn.t()
   defp maybe_halt(true, conn), do: conn
 
   defp maybe_halt(_, conn) do
