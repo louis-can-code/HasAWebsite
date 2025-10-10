@@ -3,7 +3,6 @@ defmodule HasAWebsite.BlogTest do
 
   alias HasAWebsite.Blog
 
-
   alias HasAWebsite.Blog.Post
 
   import HasAWebsite.AccountsFixtures, only: [user_scope_fixture: 0, admin_scope_fixture: 0]
@@ -21,7 +20,7 @@ defmodule HasAWebsite.BlogTest do
     end
 
     test "returns all post, with author details" do
-      #TODO: this test
+      # TODO: this test
     end
   end
 
@@ -46,11 +45,21 @@ defmodule HasAWebsite.BlogTest do
       get_post = Blog.get_post_by_slug(post.slug, preloads: [:author])
       assert get_post.author.id == scope.user.id
     end
+
+    test "does not return non-existing post" do
+      assert {:error, :not_found} == Blog.get_post_by_slug("unknown-slug")
+    end
   end
 
   describe "create_post/2" do
     test "valid data creates a post" do
-      valid_attrs = %{description: "some description", title: "some cool title", slug: "some-slug", content: "some content"}
+      valid_attrs = %{
+        description: "some description",
+        title: "some cool title",
+        slug: "some-slug",
+        content: "some content"
+      }
+
       scope = user_scope_fixture()
 
       assert {:ok, %Post{} = post} = Blog.create_post(scope, valid_attrs)
@@ -68,7 +77,12 @@ defmodule HasAWebsite.BlogTest do
     end
 
     test "valid data but no slug creates a post" do
-      valid_attrs = %{description: "some description", title: "some cool title", content: "some content"}
+      valid_attrs = %{
+        description: "some description",
+        title: "some cool title",
+        content: "some content"
+      }
+
       scope = user_scope_fixture()
 
       assert {:ok, %Post{} = post} = Blog.create_post(scope, valid_attrs)
@@ -81,17 +95,42 @@ defmodule HasAWebsite.BlogTest do
     end
 
     test "an already existing slug returns an error" do
-      valid_attrs = %{description: "some description", slug: "some-slug", title: "some cool title", content: "some content"}
+      valid_attrs = %{
+        description: "some description",
+        slug: "some-slug",
+        title: "some cool title",
+        content: "some content"
+      }
+
       scope = user_scope_fixture()
       {:ok, _post} = Blog.create_post(scope, valid_attrs)
 
-      assert {:error, %Ecto.Changeset{}} = Blog.create_post(scope, %{description: "some description", slug: "some-slug", title: "test title", content: "some content"})
+      assert {:error, %Ecto.Changeset{}} =
+               Blog.create_post(scope, %{
+                 description: "some description",
+                 slug: "some-slug",
+                 title: "test title",
+                 content: "some content"
+               })
     end
 
     test "auto-generated slug generates a unique slug" do
       scope = user_scope_fixture()
-      {:ok, _post} = Blog.create_post(scope, %{description: "some description", slug: "test", title: "test title", content: "some content"})
-      {:ok, post} = Blog.create_post(scope, %{description: "another description", title: "test", content: "more content"})
+
+      {:ok, _post} =
+        Blog.create_post(scope, %{
+          description: "some description",
+          slug: "test",
+          title: "test title",
+          content: "some content"
+        })
+
+      {:ok, post} =
+        Blog.create_post(scope, %{
+          description: "another description",
+          title: "test",
+          content: "more content"
+        })
 
       assert post.slug != "test"
     end
@@ -101,7 +140,13 @@ defmodule HasAWebsite.BlogTest do
     test "valid data updates the post" do
       scope = user_scope_fixture()
       post = post_fixture(scope)
-      update_attrs = %{description: "some updated description", slug: "new-slug", title: "some updated title", content: "some updated content"}
+
+      update_attrs = %{
+        description: "some updated description",
+        slug: "new-slug",
+        title: "some updated title",
+        content: "some updated content"
+      }
 
       assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs)
       assert post.description == "some updated description"
@@ -113,7 +158,13 @@ defmodule HasAWebsite.BlogTest do
     end
 
     test "updated slug maintains unique constraint" do
-      valid_attrs = %{description: "some description", slug: "some-slug", title: "some cool title", content: "some content"}
+      valid_attrs = %{
+        description: "some description",
+        slug: "some-slug",
+        title: "some cool title",
+        content: "some content"
+      }
+
       scope = user_scope_fixture()
       {:ok, _post} = Blog.create_post(scope, valid_attrs)
       post = post_fixture(scope)
@@ -127,7 +178,9 @@ defmodule HasAWebsite.BlogTest do
       post = post_fixture(scope)
       update_attrs = %{title: "new title"}
 
-      assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
+      assert {:ok, %Post{} = post} =
+               Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
+
       assert post.slug == "new-title"
     end
 
@@ -136,18 +189,28 @@ defmodule HasAWebsite.BlogTest do
       post = post_fixture(scope)
       update_attrs = %{title: "new title", slug: "another-slug"}
 
-      assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
+      assert {:ok, %Post{} = post} =
+               Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
+
       assert post.slug == "another-slug"
     end
 
     test "regenerate_slug generates a unique slug" do
-      valid_attrs = %{description: "some description", slug: "some-slug", title: "some cool title", content: "some content"}
+      valid_attrs = %{
+        description: "some description",
+        slug: "some-slug",
+        title: "some cool title",
+        content: "some content"
+      }
+
       scope = user_scope_fixture()
       {:ok, _post} = Blog.create_post(scope, valid_attrs)
       post = post_fixture(scope)
       update_attrs = %{title: "some slug"}
 
-      assert {:ok, %Post{} = post} = Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
+      assert {:ok, %Post{} = post} =
+               Blog.update_post(scope, post, update_attrs, regenerate_slug: true)
+
       assert post.slug != "some-slug"
     end
 
