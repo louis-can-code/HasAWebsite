@@ -17,7 +17,6 @@ defmodule HasAWebsiteWeb.PostControllerTest do
   }
   @invalid_attrs %{description: nil, title: nil, slug: nil, content: nil}
 
-  # TODO: authorisation tests
   setup :register_and_log_in_creator
 
   describe "index" do
@@ -58,6 +57,20 @@ defmodule HasAWebsiteWeb.PostControllerTest do
       conn = get(conn, ~p"/posts/#{post.slug}/edit")
       assert html_response(conn, 200) =~ "Edit Post"
     end
+
+    test "other users can not access the edit form for others' posts", %{conn: conn, post: post} do
+      admin = HasAWebsite.AccountsFixtures.admin_fixture()
+
+      conn =
+        log_in_user(
+          conn,
+          admin,
+          conn |> Map.take([:token_authenticated_at]) |> Enum.into([])
+        )
+
+      conn = get(conn, ~p"/posts/#{post.slug}/edit")
+      assert html_response(conn, 403) =~ "You do not have access"
+    end
   end
 
   describe "update post" do
@@ -78,12 +91,71 @@ defmodule HasAWebsiteWeb.PostControllerTest do
       conn = put(conn, ~p"/posts/#{post.slug}", post: @invalid_attrs)
       assert html_response(conn, 200) =~ "Edit Post"
     end
+
+    test "user can not update someone else's post", %{conn: conn, post: post} do
+      creator = HasAWebsite.AccountsFixtures.creator_fixture()
+
+      conn =
+        log_in_user(
+          conn,
+          creator,
+          conn |> Map.take([:token_authenticated_at]) |> Enum.into([])
+        )
+
+      conn = put(conn, ~p"/posts/#{post.slug}", post: @update_attrs)
+      assert html_response(conn, 403) =~ "You do not have access"
+    end
+
+    test "admin can not update someone else's post", %{conn: conn, post: post} do
+      admin = HasAWebsite.AccountsFixtures.admin_fixture()
+
+      conn =
+        log_in_user(
+          conn,
+          admin,
+          conn |> Map.take([:token_authenticated_at]) |> Enum.into([])
+        )
+
+      conn = put(conn, ~p"/posts/#{post.slug}", post: @update_attrs)
+      assert html_response(conn, 403) =~ "You do not have access"
+    end
   end
 
   describe "delete post" do
     setup [:create_post]
 
     test "deletes chosen post", %{conn: conn, post: post} do
+      conn = delete(conn, ~p"/posts/#{post.slug}")
+      assert redirected_to(conn) == ~p"/posts"
+
+      conn = get(conn, ~p"/posts/#{post.slug}")
+      assert html_response(conn, 404) =~ "Page not found"
+    end
+
+    test "user can not delete someone else's post", %{conn: conn, post: post} do
+      creator = HasAWebsite.AccountsFixtures.creator_fixture()
+
+      conn =
+        log_in_user(
+          conn,
+          creator,
+          conn |> Map.take([:token_authenticated_at]) |> Enum.into([])
+        )
+
+      conn = delete(conn, ~p"/posts/#{post.slug}")
+      assert html_response(conn, 403) =~ "You do not have access"
+    end
+
+    test "admin can delete someone else's post", %{conn: conn, post: post} do
+      admin = HasAWebsite.AccountsFixtures.admin_fixture()
+
+      conn =
+        log_in_user(
+          conn,
+          admin,
+          conn |> Map.take([:token_authenticated_at]) |> Enum.into([])
+        )
+
       conn = delete(conn, ~p"/posts/#{post.slug}")
       assert redirected_to(conn) == ~p"/posts"
 
