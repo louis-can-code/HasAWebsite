@@ -20,6 +20,7 @@ defmodule HasAWebsite.Blog do
     * {:deleted, %Post{}}
 
   """
+  @spec subscribe_posts(Scope.t()) :: :ok | {:error, {:already_registered, pid()}}
   def subscribe_posts(%Scope{} = scope) do
     key = scope.user.id
 
@@ -48,8 +49,10 @@ defmodule HasAWebsite.Blog do
       [%Post{author: %User{}}, ...]
 
   """
+  @spec list_posts(opts :: Keyword.t()) :: [Post.t()]
   def list_posts(opts \\ []) do
     preloads = Keyword.get(opts, :preloads, [])
+
     Post
     |> order_by(desc: :published_at)
     |> preload(^preloads)
@@ -70,6 +73,7 @@ defmodule HasAWebsite.Blog do
       ** (Ecto.NoResultsError)
 
   """
+  @spec get_post!(integer()) :: Post.t()
   def get_post!(id) do
     Repo.get_by!(Post, id: id)
   end
@@ -95,6 +99,7 @@ defmodule HasAWebsite.Blog do
       iex> get_post_by_slug!("unknown-slug")
       nil
   """
+  @spec get_post_by_slug(String.t(), opts :: Keyword.t()) :: Post.t() | nil
   def get_post_by_slug(slug, opts \\ []) when is_binary(slug) do
     preloads = Keyword.get(opts, :preloads, [])
 
@@ -114,6 +119,7 @@ defmodule HasAWebsite.Blog do
       iex> slug_exists?("not-an-existing-post")
       false
   """
+  @spec slug_exists?(String.t()) :: boolean()
   def slug_exists?(slug) do
     Repo.exists?(from p in Post, where: p.slug == ^slug)
   end
@@ -130,6 +136,7 @@ defmodule HasAWebsite.Blog do
       existing-slug-2
   ##
   """
+  @spec generate_slug(String.t()) :: String.t()
   def generate_slug(title) do
     title
     |> title_to_slug()
@@ -145,8 +152,8 @@ defmodule HasAWebsite.Blog do
     |> String.replace(~r/[\s|-]+/, "-")
   end
 
-  #if the slug is taken
-  #query Post for a list of number iterations of the slug
+  # if the slug is taken
+  # query Post for a list of number iterations of the slug
   defp unique_slug(base_slug) do
     pattern = "^#{base_slug}-(\\d+)$"
 
@@ -162,14 +169,15 @@ defmodule HasAWebsite.Blog do
     end
   end
 
-  #find the smallest number for which a slug does not yet exist
+  # find the smallest number for which a slug does not yet exist
   defp find_next_available_slug([], slug), do: "#{slug}-2"
+
   defp find_next_available_slug(number_list, slug) do
     number_set = MapSet.new(number_list)
 
     num =
       Stream.iterate(2, &(&1 + 1))
-      |> Enum.find(&!MapSet.member?(number_set, &1))
+      |> Enum.find(&(!MapSet.member?(number_set, &1)))
 
     "#{slug}-#{num}"
   end
@@ -186,6 +194,7 @@ defmodule HasAWebsite.Blog do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec create_post(Scope.t(), map()) :: {:ok, Post.t()} | {:error, Ecto.Changeset.t()}
   def create_post(%Scope{} = scope, attrs) do
     attrs =
       with true <- !Map.has_key?(attrs, :slug),
@@ -196,10 +205,10 @@ defmodule HasAWebsite.Blog do
       end
 
     with {:ok, post = %Post{}} <-
-          %Post{}
-          |> Post.create_post_changeset(attrs, scope)
-          |> Repo.insert() do
-      #TODO: broadcast by user creating post
+           %Post{}
+           |> Post.create_post_changeset(attrs, scope)
+           |> Repo.insert() do
+      # TODO: broadcast by user creating post
       broadcast_post(scope, {:created, post})
       {:ok, post}
     end
@@ -224,6 +233,8 @@ defmodule HasAWebsite.Blog do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec update_post(Scope.t(), Post.t(), map(), opts :: Keyword.t()) ::
+          {:ok, Post.t()} | {:error, Ecto.Changeset.t()}
   def update_post(%Scope{} = scope, %Post{} = post, attrs, opts \\ []) do
     true = post.author_id == scope.user.id
 
@@ -233,13 +244,13 @@ defmodule HasAWebsite.Blog do
            post
            |> Post.update_post_changeset(attrs)
            |> Repo.update() do
-      #TODO: look into broadcasting
+      # TODO: look into broadcasting
       broadcast_post(scope, {:updated, post})
       {:ok, post}
     end
   end
 
-  #generates a slug if:
+  # generates a slug if:
   # -no new slug was provided
   # -a new title was provided
   # -regenerate_slug option was set to true
@@ -255,7 +266,7 @@ defmodule HasAWebsite.Blog do
     end
   end
 
-  #Checks if the new slug would be of the same form as the old slug
+  # Checks if the new slug would be of the same form as the old slug
   defp new_title_needs_new_slug?(old_slug, new_title) do
     base_slug = title_to_slug(new_title)
     pattern = ~r/^#{base_slug}(-\d+)?$/
@@ -275,6 +286,7 @@ defmodule HasAWebsite.Blog do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec delete_post(Scope.t(), Post.t()) :: {:ok, Post.t()} | {:error, Ecto.Changeset.t()}
   def delete_post(%Scope{} = scope, %Post{} = post) do
     true = post.author_id == scope.user.id || verify_admin?(scope.user.role)
 
@@ -297,6 +309,7 @@ defmodule HasAWebsite.Blog do
       %Ecto.Changeset{data: %Post{}}
 
   """
+  @spec change_post(Scope.t(), Post.new_t(), attrs :: map()) :: Ecto.Changeset.t()
   def change_post(%Scope{} = scope, %Post{} = post, attrs \\ %{}) do
     true = post.author_id == scope.user.id
 

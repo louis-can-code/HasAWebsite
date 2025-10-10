@@ -20,6 +20,27 @@ defmodule HasAWebsite.Blog.Post do
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
+  @typedoc """
+  Post type for creating posts
+  """
+  @type new_t :: %__MODULE__{
+          # Required fields
+          id: integer() | nil,
+          title: String.t() | nil,
+          slug: String.t() | nil,
+          description: String.t() | nil,
+          content: String.t() | nil,
+          published_at: DateTime.t() | nil,
+          last_updated_at: DateTime.t() | nil,
+          author_id: integer() | nil,
+
+          # Associations
+          author: HasAWebsite.Accounts.User.t() | Ecto.Association.NotLoaded.t() | nil,
+
+          # Timestamps
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
 
   schema "posts" do
     field :title, :string
@@ -37,6 +58,7 @@ defmodule HasAWebsite.Blog.Post do
   @doc """
   Default post changeset
   """
+  @spec changeset(__MODULE__.new_t(), map()) :: Ecto.Changeset.t()
   def changeset(post, attrs) do
     post
     |> cast(attrs, [:title, :slug, :description, :content])
@@ -47,6 +69,8 @@ defmodule HasAWebsite.Blog.Post do
 
   If no slug is provided, a unique slug will be generated
   """
+  @spec create_post_changeset(__MODULE__.new_t(), map(), HasAWebsite.Accounts.Scope.t()) ::
+          Ecto.Changeset.t()
   def create_post_changeset(post, attrs, user_scope) do
     post
     |> cast(attrs, [:title, :slug, :description, :content])
@@ -82,6 +106,7 @@ defmodule HasAWebsite.Blog.Post do
 
   Ensure the original post is passed in with the update
   """
+  @spec update_post_changeset(__MODULE__.t(), map()) :: Ecto.Changeset.t()
   def update_post_changeset(post, attrs) do
     changeset =
       post

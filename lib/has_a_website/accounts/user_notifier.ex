@@ -1,10 +1,15 @@
 defmodule HasAWebsite.Accounts.UserNotifier do
+  @moduledoc """
+  Handles sending emails to users
+  """
+
   import Swoosh.Email
 
   alias HasAWebsite.Mailer
   alias HasAWebsite.Accounts.User
 
   # Delivers the email using the application mailer.
+  @spec deliver(String.t(), String.t(), String.t()) :: {:ok, Swoosh.Email.t()} | {:error, term()}
   defp deliver(recipient, subject, body) do
     email =
       new()
@@ -21,6 +26,8 @@ defmodule HasAWebsite.Accounts.UserNotifier do
   @doc """
   Deliver instructions to update a user email.
   """
+  @spec deliver_update_email_instructions(User.t(), String.t()) ::
+          {:ok, Swoosh.Email.t()} | {:error, term()}
   def deliver_update_email_instructions(user, url) do
     deliver(user.email, "Update email instructions", """
 
@@ -41,6 +48,8 @@ defmodule HasAWebsite.Accounts.UserNotifier do
   @doc """
   Deliver instructions to log in with a magic link.
   """
+  @spec deliver_login_instructions(User.t(), String.t()) ::
+          {:ok, Swoosh.Email.t()} | {:error, term()}
   def deliver_login_instructions(user, url) do
     case user do
       %User{confirmed_at: nil} -> deliver_confirmation_instructions(user, url)

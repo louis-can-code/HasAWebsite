@@ -28,6 +28,35 @@ defmodule HasAWebsite.Accounts.User do
           updated_at: DateTime.t()
         }
 
+  @typedoc """
+   %User{} type for user creation
+  """
+  @type new_t :: %__MODULE__{
+          # Required fields
+          id: integer() | nil,
+          email: String.t() | nil,
+          username: String.t() | nil,
+          role: atom() | nil,
+          confirmed_at: DateTime.t() | nil,
+
+          # Nullable fields
+          promoted_at: DateTime.t() | nil,
+          promoted_by_id: integer() | nil,
+
+          # Virtual fields
+          password: String.t() | nil,
+          hashed_password: String.t() | nil,
+          authenticated_at: DateTime.t() | nil,
+
+          # Associations
+          promoted_by: __MODULE__.t() | Ecto.Association.NotLoaded.t() | nil,
+          posts: [HasAWebsite.Blog.Post.t()] | Ecto.Association.NotLoaded.t() | nil,
+
+          # Timestamps
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
+
   schema "users" do
     field :email, :string
     field :username, :string

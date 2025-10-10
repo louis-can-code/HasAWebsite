@@ -20,6 +20,7 @@ defmodule HasAWebsite.Accounts do
       iex> get_user_by_username("unknown")
       nil
   """
+  @spec get_user_by_username(binary()) :: User.t() | nil
   def get_user_by_username(username) when is_binary(username) do
     Repo.get_by(User, username: username)
   end
@@ -36,6 +37,7 @@ defmodule HasAWebsite.Accounts do
       nil
 
   """
+  @spec get_user_by_email(binary()) :: User.t() | nil
   def get_user_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
   end
@@ -55,6 +57,7 @@ defmodule HasAWebsite.Accounts do
       nil
 
   """
+  @spec get_user_by_login(binary()) :: User.t() | nil
   def get_user_by_login(login) when is_binary(login) do
     if String.contains?(login, "@") do
       Repo.get_by(User, email: login)
@@ -76,6 +79,7 @@ defmodule HasAWebsite.Accounts do
 
   """
   @deprecated "Use get_user_by_login_and_password/2 instead"
+  @spec get_user_by_email_and_password(binary(), binary()) :: User.t() | nil
   def get_user_by_email_and_password(email, password)
       when is_binary(email) and is_binary(password) do
     user = Repo.get_by(User, email: email)
@@ -96,6 +100,7 @@ defmodule HasAWebsite.Accounts do
       iex> get_user_by_login_and_password("john.smith@example.com, "invalid_password")
       nil
   """
+  @spec get_user_by_login_and_password(binary(), binary()) :: User.t() | nil
   def get_user_by_login_and_password(login, password)
       when is_binary(login) and is_binary(password) do
     user =
@@ -122,6 +127,7 @@ defmodule HasAWebsite.Accounts do
       ** (Ecto.NoResultsError)
 
   """
+  @spec get_user!(integer()) :: User.t()
   def get_user!(id), do: Repo.get!(User, id)
 
   ## User registration
@@ -138,6 +144,7 @@ defmodule HasAWebsite.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec register_user(map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t()}
   def register_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
@@ -155,6 +162,7 @@ defmodule HasAWebsite.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec register_creator(map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t()}
   def register_creator(attrs) do
     %User{}
     |> User.creator_registration_changeset(attrs)
@@ -172,6 +180,7 @@ defmodule HasAWebsite.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec register_admin(map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t()}
   def register_admin(attrs) do
     %User{}
     |> User.admin_registration_changeset(attrs)
@@ -186,6 +195,7 @@ defmodule HasAWebsite.Accounts do
   The user is in sudo mode when the last authentication was done no further
   than 20 minutes ago. The limit can be given as second argument in minutes.
   """
+  @spec sudo_mode?(User.t(), integer()) :: boolean()
   def sudo_mode?(user, minutes \\ -20)
 
   def sudo_mode?(%User{authenticated_at: ts}, minutes) when is_struct(ts, DateTime) do
@@ -205,6 +215,8 @@ defmodule HasAWebsite.Accounts do
       %Ecto.Changeset{data: %User{}}
 
   """
+  @spec change_user_email(User.new_t(), attrs :: map(), opts :: Keyword.t()) ::
+          Ecto.Changeset.t()
   def change_user_email(user, attrs \\ %{}, opts \\ []) do
     User.email_changeset(user, attrs, opts)
   end
@@ -214,6 +226,7 @@ defmodule HasAWebsite.Accounts do
 
   If the token matches, the user email is updated and the token is deleted.
   """
+  @spec update_user_email(User.t(), binary()) :: {:ok, User.t()} | {:error, :transaction_aborted}
   def update_user_email(user, token) do
     context = "change:#{user.email}"
 
@@ -241,6 +254,7 @@ defmodule HasAWebsite.Accounts do
     User.username_changeset(user, attrs)
   end
 
+  @spec update_user_username(User.t(), map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t()}
   @doc """
   Updates the user username.
 
@@ -270,6 +284,7 @@ defmodule HasAWebsite.Accounts do
       %Ecto.Changeset{data: %User{}}
 
   """
+  @spec change_user_password(User.t(), attrs :: map(), opts :: Keyword.t()) :: Ecto.Changeset.t()
   def change_user_password(user, attrs \\ %{}, opts \\ []) do
     User.password_changeset(user, attrs, opts)
   end
@@ -288,6 +303,8 @@ defmodule HasAWebsite.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec update_user_password(User.t(), map()) ::
+          {:ok, {User.t(), list(UserToken.t())}} | {:error, Ecto.Changeset.t()}
   def update_user_password(user, attrs) do
     user
     |> User.password_changeset(attrs)
@@ -337,6 +354,7 @@ defmodule HasAWebsite.Accounts do
     end
   end
 
+  @spec promoter_is_authorised?(User.t()) :: boolean()
   defp promoter_is_authorised?(%User{role: :admin}), do: true
   defp promoter_is_authorised?(_), do: false
 
@@ -345,6 +363,7 @@ defmodule HasAWebsite.Accounts do
   @doc """
   Generates a session token.
   """
+  @spec generate_user_session_token(User.t()) :: binary()
   def generate_user_session_token(user) do
     {token, user_token} = UserToken.build_session_token(user)
     Repo.insert!(user_token)
@@ -356,6 +375,7 @@ defmodule HasAWebsite.Accounts do
 
   If the token is valid `{user, token_inserted_at}` is returned, otherwise `nil` is returned.
   """
+  @spec get_user_by_session_token(binary()) :: {User.t(), DateTime.t()} | nil
   def get_user_by_session_token(token) do
     {:ok, query} = UserToken.verify_session_token_query(token)
     Repo.one(query)
@@ -364,6 +384,7 @@ defmodule HasAWebsite.Accounts do
   @doc """
   Gets the user with the given magic link token.
   """
+  @spec get_user_by_magic_link_token(binary()) :: String.t() | nil
   def get_user_by_magic_link_token(token) do
     with {:ok, query} <- UserToken.verify_magic_link_token_query(token),
          {user, _token} <- Repo.one(query) do
@@ -391,6 +412,9 @@ defmodule HasAWebsite.Accounts do
      source of security pitfalls. See the "Mixing magic link and password registration" section of
      `mix help phx.gen.auth`.
   """
+  @spec login_user_by_magic_link(binary()) ::
+          {:error, :not_found | Ecto.Changeset.t()}
+          | {:ok, {User.t(), list(UserToken.t())}}
   def login_user_by_magic_link(token) do
     {:ok, query} = UserToken.verify_magic_link_token_query(token)
 
@@ -428,6 +452,8 @@ defmodule HasAWebsite.Accounts do
       {:ok, %{to: ..., body: ...}}
 
   """
+  @spec deliver_user_update_email_instructions(User.t(), String.t(), (binary() -> binary())) ::
+          {:ok, Swoosh.Email.t()} | {:error, term()}
   def deliver_user_update_email_instructions(%User{} = user, current_email, update_email_url_fun)
       when is_function(update_email_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "change:#{current_email}")
@@ -439,6 +465,8 @@ defmodule HasAWebsite.Accounts do
   @doc """
   Delivers the magic link login instructions to the given user.
   """
+  @spec deliver_login_instructions(User.t(), (binary() -> binary())) ::
+          {:ok, Swoosh.Email.t()} | {:error, term()}
   def deliver_login_instructions(%User{} = user, magic_link_url_fun)
       when is_function(magic_link_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "login")
@@ -449,6 +477,7 @@ defmodule HasAWebsite.Accounts do
   @doc """
   Deletes the signed token with the given context.
   """
+  @spec delete_user_session_token(binary()) :: :ok
   def delete_user_session_token(token) do
     Repo.delete_all(from(UserToken, where: [token: ^token, context: "session"]))
     :ok
@@ -456,6 +485,8 @@ defmodule HasAWebsite.Accounts do
 
   ## Token helper
 
+  @spec update_user_and_delete_all_tokens(Ecto.Changeset.t()) ::
+          {:ok, {User.t(), list(UserToken.t())}} | {:error, Ecto.Changeset.t()}
   defp update_user_and_delete_all_tokens(changeset) do
     Repo.transact(fn ->
       with {:ok, user} <- Repo.update(changeset) do

@@ -18,6 +18,10 @@ defmodule HasAWebsite.Accounts.Scope do
 
   alias HasAWebsite.Accounts.User
 
+  @type t :: %__MODULE__{
+          user: User.t() | nil
+        }
+
   defstruct user: nil
 
   @doc """
@@ -25,6 +29,7 @@ defmodule HasAWebsite.Accounts.Scope do
 
   Returns nil if no user is given.
   """
+  @spec for_user(User.t() | nil) :: __MODULE__.t()
   def for_user(%User{} = user) do
     %__MODULE__{user: user}
   end

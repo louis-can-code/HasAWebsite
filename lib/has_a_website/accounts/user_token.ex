@@ -1,7 +1,35 @@
 defmodule HasAWebsite.Accounts.UserToken do
   use Ecto.Schema
+
+  @moduledoc """
+  Manages creation, storage, and validation of user tokens for sessions and login via magic link.
+  """
+
   import Ecto.Query
-  alias HasAWebsite.Accounts.UserToken
+  alias HasAWebsite.Accounts.User
+
+  @type t :: %__MODULE__{
+          token: binary(),
+          context: String.t(),
+          sent_to: String.t() | nil,
+          authenticated_at: DateTime.t() | nil,
+          user_id: integer(),
+          user: User.t() | Ecto.Association.NotLoaded.t(),
+          inserted_at: DateTime.t()
+        }
+
+  @typedoc """
+  UserToken type for token creation
+  """
+  @type new_t :: %__MODULE__{
+          token: binary() | nil,
+          context: String.t() | nil,
+          sent_to: String.t() | nil,
+          authenticated_at: DateTime.t() | nil,
+          user_id: integer() | nil,
+          user: User.t() | Ecto.Association.NotLoaded.t() | nil,
+          inserted_at: DateTime.t() | nil
+        }
 
   @hash_algorithm :sha256
   @rand_size 32
@@ -17,7 +45,7 @@ defmodule HasAWebsite.Accounts.UserToken do
     field :context, :string
     field :sent_to, :string
     field :authenticated_at, :utc_datetime
-    belongs_to :user, HasAWebsite.Accounts.User
+    belongs_to :user, User
 
     timestamps(type: :utc_datetime, updated_at: false)
   end
@@ -41,10 +69,11 @@ defmodule HasAWebsite.Accounts.UserToken do
   and devices in the UI and allow users to explicitly expire any
   session they deem invalid.
   """
+  @spec build_session_token(User.t()) :: {binary(), __MODULE__.new_t()}
   def build_session_token(user) do
     token = :crypto.strong_rand_bytes(@rand_size)
     dt = user.authenticated_at || DateTime.utc_now(:second)
-    {token, %UserToken{token: token, context: "session", user_id: user.id, authenticated_at: dt}}
+    {token, %__MODULE__{token: token, context: "session", user_id: user.id, authenticated_at: dt}}
   end
 
   @doc """
@@ -55,6 +84,7 @@ defmodule HasAWebsite.Accounts.UserToken do
   The token is valid if it matches the value in the database and it has
   not expired (after @session_validity_in_days).
   """
+  @spec verify_session_token_query(binary()) :: {:ok, Ecto.Query.t()}
   def verify_session_token_query(token) do
     query =
       from token in by_token_and_context_query(token, "session"),
@@ -78,16 +108,18 @@ defmodule HasAWebsite.Accounts.UserToken do
   Users can easily adapt the existing code to provide other types of delivery methods,
   for example, by phone numbers.
   """
+  @spec build_email_token(User.t(), String.t()) :: {binary(), __MODULE__.new_t()}
   def build_email_token(user, context) do
     build_hashed_token(user, context, user.email)
   end
 
+  @spec build_hashed_token(User.t(), String.t(), String.t()) :: {binary(), __MODULE__.new_t()}
   defp build_hashed_token(user, context, sent_to) do
     token = :crypto.strong_rand_bytes(@rand_size)
     hashed_token = :crypto.hash(@hash_algorithm, token)
 
     {Base.url_encode64(token, padding: false),
-     %UserToken{
+     %__MODULE__{
        token: hashed_token,
        context: context,
        sent_to: sent_to,
@@ -104,6 +136,7 @@ defmodule HasAWebsite.Accounts.UserToken do
   database. This function also checks if the token is being used within
   15 minutes. The context of a magic link token is always "login".
   """
+  @spec verify_magic_link_token_query(binary()) :: {:ok, Ecto.Query.t()} | :error
   def verify_magic_link_token_query(token) do
     case Base.url_decode64(token, padding: false) do
       {:ok, decoded_token} ->
@@ -134,6 +167,13 @@ defmodule HasAWebsite.Accounts.UserToken do
   database and if it has not expired (after @change_email_validity_in_days).
   The context must always start with "change:".
   """
+  @typedoc """
+  Binary type with at least 7 bytes at the start.
+  Less than 7 bytes could not match with "change:" <> _
+  """
+  @type change_context :: <<_::56, _::_*8>>
+  @spec verify_change_email_token_query(binary(), change_context()) ::
+          {:ok, Ecto.Query.t()} | :error
   def verify_change_email_token_query(token, "change:" <> _ = context) do
     case Base.url_decode64(token, padding: false) do
       {:ok, decoded_token} ->
@@ -150,7 +190,8 @@ defmodule HasAWebsite.Accounts.UserToken do
     end
   end
 
+  @spec by_token_and_context_query(binary(), String.t()) :: Ecto.Query.t()
   defp by_token_and_context_query(token, context) do
-    from UserToken, where: [token: ^token, context: ^context]
+    from __MODULE__, where: [token: ^token, context: ^context]
   end
 end
