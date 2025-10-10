@@ -23,7 +23,7 @@ defmodule HasAWebsite.Accounts do
   @spec get_user_by_username(binary()) :: User.t() | {:error, :not_found}
   def get_user_by_username(username) when is_binary(username) do
     case Repo.get_by(User, username: username) do
-      nil -> {:error, :not_founf}
+      nil -> {:error, :not_found}
       user -> user
     end
   end
@@ -318,7 +318,7 @@ defmodule HasAWebsite.Accounts do
           {:ok, User.t()}
           | {:error, :unauthorised}
           | {:error, :confirmation_required}
-          | {:error, :user_not_found}
+          | {:error, :not_found}
           | {:error, :already_elevated}
           | {:error, Ecto.Changeset.t()}
   def promote_to_creator(promoter, promotee_name_or_email, opts \\ []) do
@@ -332,7 +332,7 @@ defmodule HasAWebsite.Accounts do
         {:error, :unauthorised}
 
       user == {:error, :not_found} ->
-        {:error, :user_not_found}
+        {:error, :not_found}
 
       user.role in [:creator, :admin] ->
         {:error, :has_elevated_role}
@@ -364,22 +364,26 @@ defmodule HasAWebsite.Accounts do
 
   If the token is valid `{user, token_inserted_at}` is returned, otherwise `nil` is returned.
   """
-  @spec get_user_by_session_token(binary()) :: {User.t(), DateTime.t()} | nil
+  @spec get_user_by_session_token(binary()) :: {User.t(), DateTime.t()} | {:error, :not_found}
   def get_user_by_session_token(token) do
     {:ok, query} = UserToken.verify_session_token_query(token)
-    Repo.one(query)
+
+    case Repo.one(query) do
+      nil -> {:error, :not_found}
+      result -> result
+    end
   end
 
   @doc """
   Gets the user with the given magic link token.
   """
-  @spec get_user_by_magic_link_token(binary()) :: String.t() | nil
+  @spec get_user_by_magic_link_token(binary()) :: String.t() | {:error, :not_found}
   def get_user_by_magic_link_token(token) do
     with {:ok, query} <- UserToken.verify_magic_link_token_query(token),
          {user, _token} <- Repo.one(query) do
       user
     else
-      _ -> nil
+      _ -> {:error, :not_found}
     end
   end
 

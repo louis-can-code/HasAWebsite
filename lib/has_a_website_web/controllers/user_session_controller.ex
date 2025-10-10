@@ -72,17 +72,19 @@ defmodule HasAWebsiteWeb.UserSessionController do
   end
 
   def confirm(conn, %{"token" => token}) do
-    if user = Accounts.get_user_by_magic_link_token(token) do
-      form = Phoenix.Component.to_form(%{"token" => token}, as: "user")
+    case Accounts.get_user_by_magic_link_token(token) do
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "Magic link is invalid or it has expired.")
+        |> redirect(to: ~p"/users/log-in")
 
-      conn
-      |> assign(:user, user)
-      |> assign(:form, form)
-      |> render(:confirm)
-    else
-      conn
-      |> put_flash(:error, "Magic link is invalid or it has expired.")
-      |> redirect(to: ~p"/users/log-in")
+      user ->
+        form = Phoenix.Component.to_form(%{"token" => token}, as: "user")
+
+        conn
+        |> assign(:user, user)
+        |> assign(:form, form)
+        |> render(:confirm)
     end
   end
 

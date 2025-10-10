@@ -8,7 +8,7 @@ defmodule HasAWebsite.AccountsTest do
 
   describe "get_user_by_username/1" do
     test "does not return the user if the username does not exist" do
-      refute Accounts.get_user_by_username("unknown")
+      assert {:error, :not_found} == Accounts.get_user_by_username("unknown")
     end
 
     test "returns the user if the username exists" do
@@ -19,7 +19,7 @@ defmodule HasAWebsite.AccountsTest do
 
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do
-      refute Accounts.get_user_by_email("unknown@example.com")
+      assert {:error, :not_found} == Accounts.get_user_by_email("unknown@example.com")
     end
 
     test "returns the user if the email exists" do
@@ -30,16 +30,20 @@ defmodule HasAWebsite.AccountsTest do
 
   describe "get_user_by_login_and_password/2" do
     test "does not return the user if the email does not exist" do
-      refute Accounts.get_user_by_login_and_password("unknown@example.com", "Hello world!")
+      assert {:error, :not_found} ==
+               Accounts.get_user_by_login_and_password("unknown@example.com", "Hello world!")
     end
 
     test "does not return the user if the username does not exist" do
-      refute Accounts.get_user_by_login_and_password("unknown", "Hello world!")
+      assert {:error, :not_found} ==
+               Accounts.get_user_by_login_and_password("unknown", "Hello world!")
     end
 
     test "does not return the user if the password is not valid" do
       user = user_fixture() |> set_password()
-      refute Accounts.get_user_by_login_and_password(user.email, "invalid")
+
+      assert {:error, :not_found} ==
+               Accounts.get_user_by_login_and_password(user.email, "invalid")
     end
 
     test "returns the user if the username and password are valid" do
@@ -82,7 +86,9 @@ defmodule HasAWebsite.AccountsTest do
       email = unique_user_email()
       {:error, changeset} = Accounts.register_user(%{email: email, username: "dw?12"})
 
-      assert "can only contain numbers, letters, underscores, and/or hyphens" in errors_on(changeset).username
+      assert "can only contain numbers, letters, underscores, and/or hyphens" in errors_on(
+               changeset
+             ).username
     end
 
     test "rejects username starting or ending with a hyphen/underscore" do
@@ -143,7 +149,9 @@ defmodule HasAWebsite.AccountsTest do
       assert "has already been taken" in errors_on(changeset).username
 
       # Now try with the upper cased username too, to check that username case is ignored.
-      {:error, changeset} = Accounts.register_user(%{email: username, username: String.upcase(username)})
+      {:error, changeset} =
+        Accounts.register_user(%{email: username, username: String.upcase(username)})
+
       assert "has already been taken" in errors_on(changeset).username
     end
 
@@ -182,7 +190,10 @@ defmodule HasAWebsite.AccountsTest do
     test "registers users without password" do
       email = unique_user_email()
       username = unique_user_username()
-      {:ok, user} = Accounts.register_user(valid_user_attributes(email: email, username: username))
+
+      {:ok, user} =
+        Accounts.register_user(valid_user_attributes(email: email, username: username))
+
       assert user.email == email
       assert user.username == username
       assert is_nil(user.hashed_password)
@@ -195,7 +206,14 @@ defmodule HasAWebsite.AccountsTest do
     test "registers user with a hashed password and sets role to admin" do
       email = unique_user_email()
       username = unique_user_username()
-      {:ok, user} = Accounts.register_admin(%{email: email, username: username, password: valid_user_password()})
+
+      {:ok, user} =
+        Accounts.register_admin(%{
+          email: email,
+          username: username,
+          password: valid_user_password()
+        })
+
       assert user.email == email
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
@@ -312,7 +330,8 @@ defmodule HasAWebsite.AccountsTest do
     test "validates username", %{user: user} do
       {:error, changeset} = Accounts.update_user_username(user, %{"username" => "in--valid"})
 
-      assert %{username: ["can not contain consecutive special characters"]} = errors_on(changeset)
+      assert %{username: ["can not contain consecutive special characters"]} =
+               errors_on(changeset)
     end
 
     test "updates username", %{user: user} do
@@ -320,7 +339,7 @@ defmodule HasAWebsite.AccountsTest do
       {:ok, _changeset} = Accounts.update_user_username(user, %{"username" => username})
 
       assert Accounts.get_user_by_email(user.email).username == username
-      assert is_nil(Accounts.get_user_by_username(user.username))
+      assert {:error, :not_found} == Accounts.get_user_by_username(user.username)
     end
 
     test "validates username uniqueness", %{user: user} do
@@ -331,7 +350,8 @@ defmodule HasAWebsite.AccountsTest do
     end
 
     test "ignores uniqueness constraint when changing case in own username", %{user: user} do
-      {:ok, _changeset} = Accounts.update_user_username(user, %{"username" => String.upcase(user.username)})
+      {:ok, _changeset} =
+        Accounts.update_user_username(user, %{"username" => String.upcase(user.username)})
 
       assert Accounts.get_user_by_email(user.email).username == String.upcase(user.username)
     end
@@ -377,7 +397,8 @@ defmodule HasAWebsite.AccountsTest do
           password_confirmation: "another"
         })
 
-      assert "should be at least 12 character(s)" in errors_on(changeset).password && "does not match password" in errors_on(changeset).password_confirmation
+      assert "should be at least 12 character(s)" in errors_on(changeset).password &&
+               "does not match password" in errors_on(changeset).password_confirmation
     end
 
     test "validates maximum values for password for security", %{user: user} do
@@ -427,7 +448,8 @@ defmodule HasAWebsite.AccountsTest do
     end
 
     test "verifies promoter is authorised", %{user: user} do
-      assert {:error, :unauthorised} == Accounts.promote_to_creator(user, user.username, confirmation: true)
+      assert {:error, :unauthorised} ==
+               Accounts.promote_to_creator(user, user.username, confirmation: true)
     end
 
     test "requires confirmation", %{user: user, admin: admin} do
@@ -435,17 +457,20 @@ defmodule HasAWebsite.AccountsTest do
     end
 
     test "verifies user can be found", %{admin: admin} do
-      assert {:error, :user_not_found} == Accounts.promote_to_creator(admin, "unknown", confirmation: true)
+      assert {:error, :not_found} ==
+               Accounts.promote_to_creator(admin, "unknown", confirmation: true)
     end
 
     test "can not promote creator", %{admin: admin, user: user} do
       {:ok, creator} = Accounts.promote_to_creator(admin, user.username, confirmation: true)
-      assert {:error, :has_elevated_role} = Accounts.promote_to_creator(admin, creator.username, confirmation: true)
 
+      assert {:error, :has_elevated_role} =
+               Accounts.promote_to_creator(admin, creator.username, confirmation: true)
     end
 
     test "can not promote admin", %{admin: admin} do
-      assert {:error, :has_elevated_role} = Accounts.promote_to_creator(admin, admin.username, confirmation: true)
+      assert {:error, :has_elevated_role} =
+               Accounts.promote_to_creator(admin, admin.username, confirmation: true)
     end
   end
 
@@ -494,13 +519,13 @@ defmodule HasAWebsite.AccountsTest do
     end
 
     test "does not return user for invalid token" do
-      refute Accounts.get_user_by_session_token("oops")
+      assert {:error, :not_found} == Accounts.get_user_by_session_token("oops")
     end
 
     test "does not return user for expired token", %{token: token} do
       dt = ~N[2020-01-01 00:00:00]
       {1, nil} = Repo.update_all(UserToken, set: [inserted_at: dt, authenticated_at: dt])
-      refute Accounts.get_user_by_session_token(token)
+      assert {:error, :not_found} == Accounts.get_user_by_session_token(token)
     end
   end
 
@@ -517,12 +542,12 @@ defmodule HasAWebsite.AccountsTest do
     end
 
     test "does not return user for invalid token" do
-      refute Accounts.get_user_by_magic_link_token("oops")
+      assert {:error, :not_found} == Accounts.get_user_by_magic_link_token("oops")
     end
 
     test "does not return user for expired token", %{token: token} do
       {1, nil} = Repo.update_all(UserToken, set: [inserted_at: ~N[2020-01-01 00:00:00]])
-      refute Accounts.get_user_by_magic_link_token(token)
+      assert {:error, :not_found} == Accounts.get_user_by_magic_link_token(token)
     end
   end
 
@@ -563,7 +588,7 @@ defmodule HasAWebsite.AccountsTest do
       user = user_fixture()
       token = Accounts.generate_user_session_token(user)
       assert Accounts.delete_user_session_token(token) == :ok
-      refute Accounts.get_user_by_session_token(token)
+      assert {:error, :not_found} == Accounts.get_user_by_session_token(token)
     end
   end
 
