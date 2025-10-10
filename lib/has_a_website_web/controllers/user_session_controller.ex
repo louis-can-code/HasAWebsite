@@ -34,27 +34,33 @@ defmodule HasAWebsiteWeb.UserSessionController do
 
   # email + password login
   def create(conn, %{"user" => %{"login" => login, "password" => password} = user_params}) do
-    if user = Accounts.get_user_by_login_and_password(login, password) do
-      conn
-      |> put_flash(:info, "Welcome back!")
-      |> UserAuth.log_in_user(user, user_params)
-    else
-      form = Phoenix.Component.to_form(user_params, as: "user")
+    case Accounts.get_user_by_login_and_password(login, password) do
+      {:error, :not_found} ->
+        form = Phoenix.Component.to_form(user_params, as: "user")
 
-      # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
-      conn
-      |> put_flash(:error, "Invalid username/email or password")
-      |> render(:new, form: form)
+        # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
+        conn
+        |> put_flash(:error, "Invalid username/email or password")
+        |> render(:new, form: form)
+
+      user ->
+        conn
+        |> put_flash(:info, "Welcome back!")
+        |> UserAuth.log_in_user(user, user_params)
     end
   end
 
   # magic link request
   def create(conn, %{"user" => %{"email" => email}}) do
-    if user = Accounts.get_user_by_email(email) do
-      Accounts.deliver_login_instructions(
-        user,
-        &url(~p"/users/log-in/#{&1}")
-      )
+    case Accounts.get_user_by_email(email) do
+      {:error, :not_found} ->
+        nil
+
+      user ->
+        Accounts.deliver_login_instructions(
+          user,
+          &url(~p"/users/log-in/#{&1}")
+        )
     end
 
     info =

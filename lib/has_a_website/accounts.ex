@@ -20,9 +20,12 @@ defmodule HasAWebsite.Accounts do
       iex> get_user_by_username("unknown")
       nil
   """
-  @spec get_user_by_username(binary()) :: User.t() | nil
+  @spec get_user_by_username(binary()) :: User.t() | {:error, :not_found}
   def get_user_by_username(username) when is_binary(username) do
-    Repo.get_by(User, username: username)
+    case Repo.get_by(User, username: username) do
+      nil -> {:error, :not_founf}
+      user -> user
+    end
   end
 
   @doc """
@@ -37,9 +40,12 @@ defmodule HasAWebsite.Accounts do
       nil
 
   """
-  @spec get_user_by_email(binary()) :: User.t() | nil
+  @spec get_user_by_email(binary()) :: User.t() | {:error, :not_found}
   def get_user_by_email(email) when is_binary(email) do
-    Repo.get_by(User, email: email)
+    case Repo.get_by(User, email: email) do
+      nil -> {:error, :not_found}
+      user -> user
+    end
   end
 
   @doc """
@@ -57,33 +63,16 @@ defmodule HasAWebsite.Accounts do
       nil
 
   """
-  @spec get_user_by_login(binary()) :: User.t() | nil
+  @spec get_user_by_login(binary()) :: User.t() | {:error, :not_found}
   def get_user_by_login(login) when is_binary(login) do
-    if String.contains?(login, "@") do
-      Repo.get_by(User, email: login)
-    else
-      Repo.get_by(User, username: login)
-    end
-  end
+    user =
+      if String.contains?(login, "@") do
+        Repo.get_by(User, email: login)
+      else
+        Repo.get_by(User, username: login)
+      end
 
-  @doc """
-  Gets a user by email and password.
-
-  ## Examples
-
-      iex> get_user_by_email_and_password("foo@example.com", "correct_password")
-      %User{}
-
-      iex> get_user_by_email_and_password("foo@example.com", "invalid_password")
-      nil
-
-  """
-  @deprecated "Use get_user_by_login_and_password/2 instead"
-  @spec get_user_by_email_and_password(binary(), binary()) :: User.t() | nil
-  def get_user_by_email_and_password(email, password)
-      when is_binary(email) and is_binary(password) do
-    user = Repo.get_by(User, email: email)
-    if User.valid_password?(user, password), do: user
+    if is_nil(user), do: {:error, :not_found}, else: user
   end
 
   @doc """
@@ -100,7 +89,7 @@ defmodule HasAWebsite.Accounts do
       iex> get_user_by_login_and_password("john.smith@example.com, "invalid_password")
       nil
   """
-  @spec get_user_by_login_and_password(binary(), binary()) :: User.t() | nil
+  @spec get_user_by_login_and_password(binary(), binary()) :: User.t() | {:error, :not_found}
   def get_user_by_login_and_password(login, password)
       when is_binary(login) and is_binary(password) do
     user =
@@ -110,7 +99,7 @@ defmodule HasAWebsite.Accounts do
         Repo.get_by(User, username: login)
       end
 
-    if User.valid_password?(user, password), do: user
+    if User.valid_password?(user, password), do: user, else: {:error, :not_found}
   end
 
   @doc """
@@ -342,7 +331,7 @@ defmodule HasAWebsite.Accounts do
       !promoter_is_authorised?(promoter) ->
         {:error, :unauthorised}
 
-      is_nil(user) ->
+      user == {:error, :not_found} ->
         {:error, :user_not_found}
 
       user.role in [:creator, :admin] ->
