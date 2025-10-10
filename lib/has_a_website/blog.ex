@@ -99,13 +99,16 @@ defmodule HasAWebsite.Blog do
       iex> get_post_by_slug!("unknown-slug")
       nil
   """
-  @spec get_post_by_slug(String.t(), opts :: Keyword.t()) :: Post.t() | nil
+  @spec get_post_by_slug(String.t(), opts :: Keyword.t()) :: Post.t() | {:error, :not_found}
   def get_post_by_slug(slug, opts \\ []) when is_binary(slug) do
     preloads = Keyword.get(opts, :preloads, [])
 
-    Post
-    |> preload(^preloads)
-    |> Repo.get_by(slug: slug)
+    post =
+      Post
+      |> preload(^preloads)
+      |> Repo.get_by(slug: slug)
+
+    if post, do: post, else: {:error, :not_found}
   end
 
   @doc """
