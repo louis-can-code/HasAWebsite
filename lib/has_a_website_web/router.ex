@@ -89,7 +89,7 @@ defmodule HasAWebsiteWeb.Router do
     get "/:slug", PostController, :show
   end
 
-  # role-based access (managing posts)
+  # Role-based access (managing posts)
   scope "/posts", HasAWebsiteWeb do
     pipe_through [:browser, :require_authenticated_user, :creator]
 
