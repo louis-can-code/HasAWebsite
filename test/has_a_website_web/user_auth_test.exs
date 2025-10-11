@@ -110,7 +110,7 @@ defmodule HasAWebsiteWeb.UserAuthTest do
       refute conn.cookies[@remember_me_cookie]
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
       assert redirected_to(conn) == ~p"/"
-      refute Accounts.get_user_by_session_token(user_token)
+      assert {:error, :not_found} == Accounts.get_user_by_session_token(user_token)
     end
 
     test "works even if user is already logged out", %{conn: conn} do

@@ -118,7 +118,7 @@ defmodule HasAWebsiteWeb.UserSettingsControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
                "Email changed successfully"
 
-      refute Accounts.get_user_by_email(user.email)
+      assert {:error, :not_found} == Accounts.get_user_by_email(user.email)
       assert Accounts.get_user_by_email(email)
 
       conn = get(conn, ~p"/users/settings/confirm-email/#{token}")
