@@ -79,7 +79,10 @@ defmodule HasAWebsiteWeb.UserSessionControllerTest do
 
       conn =
         post(conn, ~p"/users/log-in", %{
-          "user" => %{"email" => user.email, "password" => valid_user_password()}
+          "user" => %{
+            "login" => user.email,
+            "password" => valid_user_password()
+          }
         })
 
       assert get_session(conn, :user_token)
@@ -88,7 +91,7 @@ defmodule HasAWebsiteWeb.UserSessionControllerTest do
       # Now do a logged in request and assert on the menu
       conn = get(conn, ~p"/")
       response = html_response(conn, 200)
-      assert response =~ user.email
+      assert response =~ ~r/#{user.email}|#{user.username}/
       assert response =~ ~p"/users/settings"
       assert response =~ ~p"/users/log-out"
     end
@@ -99,7 +102,7 @@ defmodule HasAWebsiteWeb.UserSessionControllerTest do
       conn =
         post(conn, ~p"/users/log-in", %{
           "user" => %{
-            "email" => user.email,
+            "login" => user.email,
             "password" => valid_user_password(),
             "remember_me" => "true"
           }
@@ -117,7 +120,7 @@ defmodule HasAWebsiteWeb.UserSessionControllerTest do
         |> init_test_session(user_return_to: "/foo/bar")
         |> post(~p"/users/log-in", %{
           "user" => %{
-            "email" => user.email,
+            "login" => user.email,
             "password" => valid_user_password()
           }
         })
@@ -129,12 +132,12 @@ defmodule HasAWebsiteWeb.UserSessionControllerTest do
     test "emits error message with invalid credentials", %{conn: conn, user: user} do
       conn =
         post(conn, ~p"/users/log-in?mode=password", %{
-          "user" => %{"email" => user.email, "password" => "invalid_password"}
+          "user" => %{"login" => user.email, "password" => "invalid_password"}
         })
 
       response = html_response(conn, 200)
       assert response =~ "Log in"
-      assert response =~ "Invalid email or password"
+      assert response =~ "Invalid username/email or password"
     end
   end
 
@@ -163,7 +166,7 @@ defmodule HasAWebsiteWeb.UserSessionControllerTest do
       # Now do a logged in request and assert on the menu
       conn = get(conn, ~p"/")
       response = html_response(conn, 200)
-      assert response =~ user.email
+      assert response =~ ~r/#{user.email}|#{user.username}/
       assert response =~ ~p"/users/settings"
       assert response =~ ~p"/users/log-out"
     end
@@ -187,7 +190,7 @@ defmodule HasAWebsiteWeb.UserSessionControllerTest do
       # Now do a logged in request and assert on the menu
       conn = get(conn, ~p"/")
       response = html_response(conn, 200)
-      assert response =~ user.email
+      assert response =~ ~r/#{user.email}|#{user.username}/
       assert response =~ ~p"/users/settings"
       assert response =~ ~p"/users/log-out"
     end
