@@ -21,7 +21,7 @@ defmodule HasAWebsite.Accounts.User do
 
           # Associations
           promoted_by: __MODULE__.t() | Ecto.Association.NotLoaded.t() | nil,
-          posts: [HasAWebsite.Blog.Post.t()] | Ecto.Association.NotLoaded.t() | nil,
+          posts: [HasAWebsite.Blog.Post.t()] | Ecto.Association.NotLoaded.t(),
 
           # Timestamps
           inserted_at: DateTime.t(),
@@ -50,7 +50,7 @@ defmodule HasAWebsite.Accounts.User do
 
           # Associations
           promoted_by: __MODULE__.t() | Ecto.Association.NotLoaded.t() | nil,
-          posts: [HasAWebsite.Blog.Post.t()] | Ecto.Association.NotLoaded.t() | nil,
+          posts: [HasAWebsite.Blog.Post.t()] | Ecto.Association.NotLoaded.t(),
 
           # Timestamps
           inserted_at: DateTime.t() | nil,
