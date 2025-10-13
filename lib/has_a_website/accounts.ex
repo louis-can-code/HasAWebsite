@@ -135,8 +135,8 @@ defmodule HasAWebsite.Accounts do
   """
   @spec register_user(map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t()}
   def register_user(attrs) do
-    %User{}
-    |> User.registration_changeset(attrs)
+    attrs
+    |> User.registration_changeset()
     |> Repo.insert()
   end
 
@@ -153,8 +153,8 @@ defmodule HasAWebsite.Accounts do
   """
   @spec register_creator(map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t()}
   def register_creator(attrs) do
-    %User{}
-    |> User.creator_registration_changeset(attrs)
+    attrs
+    |> User.creator_registration_changeset()
     |> Repo.insert()
   end
 
@@ -171,8 +171,8 @@ defmodule HasAWebsite.Accounts do
   """
   @spec register_admin(map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t()}
   def register_admin(attrs) do
-    %User{}
-    |> User.admin_registration_changeset(attrs)
+    attrs
+    |> User.admin_registration_changeset()
     |> Repo.insert()
   end
 

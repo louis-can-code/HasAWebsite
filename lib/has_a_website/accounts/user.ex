@@ -91,10 +91,10 @@ defmodule HasAWebsite.Accounts.User do
       uniqueness of the email, useful when displaying live validations.
       Defaults to `true`.
   """
-  @spec registration_changeset(__MODULE__.new_t(), map(), opts :: Keyword.t()) ::
+  @spec registration_changeset(map(), opts :: Keyword.t()) ::
           Ecto.Changeset.t()
-  def registration_changeset(user, attrs, opts \\ []) do
-    user
+  def registration_changeset(attrs, opts \\ []) do
+    %__MODULE__{}
     |> cast(attrs, [:email, :username])
     |> validate_email(opts)
     |> validate_user_username()
@@ -209,10 +209,10 @@ defmodule HasAWebsite.Accounts.User do
   @doc """
   A user changeset for registering creators
   """
-  @spec creator_registration_changeset(__MODULE__.new_t(), map(), opts :: Keyword.t()) ::
+  @spec creator_registration_changeset(map(), opts :: Keyword.t()) ::
           Ecto.Changeset.t()
-  def creator_registration_changeset(user, attrs, opts \\ []) do
-    user
+  def creator_registration_changeset(attrs, opts \\ []) do
+    %__MODULE__{}
     |> cast(attrs, [:email, :password, :username])
     |> validate_required([:email, :password, :username])
     |> validate_email(opts)
@@ -225,10 +225,10 @@ defmodule HasAWebsite.Accounts.User do
   @doc """
   A user changeset for registering admins
   """
-  @spec admin_registration_changeset(__MODULE__.new_t(), map(), opts :: Keyword.t()) ::
+  @spec admin_registration_changeset(map(), opts :: Keyword.t()) ::
           Ecto.Changeset.t()
-  def admin_registration_changeset(user, attrs, opts \\ []) do
-    user
+  def admin_registration_changeset(attrs, opts \\ []) do
+    %__MODULE__{}
     |> cast(attrs, [:email, :password, :username])
     |> validate_required([:email, :password, :username])
     |> validate_email(opts)
