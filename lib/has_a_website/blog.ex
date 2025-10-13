@@ -352,21 +352,27 @@ defmodule HasAWebsite.Blog do
   def get_comment!(id), do: Repo.get!(Comment, id)
 
   @doc """
-  Creates a comment.
+  Creates a comment. Optional replying_to field for when the comment
+  is replying to another comment
 
   ## Examples
 
-      iex> create_comment(%{field: value})
+      iex> create_comment(scope, post, %{field: value})
       {:ok, %Comment{}}
 
-      iex> create_comment(%{field: bad_value})
+      iex> create_comment(scope, post, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec create_comment(map()) :: {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
-  def create_comment(attrs) do
-    %Comment{}
-    |> Comment.create_comment_changeset(attrs)
+  @spec create_comment(Scope.t(), Post.t(), map(), replying_to :: Comment.t() | nil) ::
+          {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
+  def create_comment(%Scope{} = scope, %Post{} = post, attrs, replying_to \\ nil) do
+    attrs
+    |> Comment.create_comment_changeset(
+      scope.user.id,
+      post.id,
+      if(replying_to, do: replying_to.user_id, else: nil)
+    )
     |> Repo.insert()
   end
 
@@ -382,7 +388,8 @@ defmodule HasAWebsite.Blog do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_comment(Comment.t(), map()) :: {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
+  @spec update_comment(Comment.new_t(), map()) ::
+          {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
   def update_comment(%Comment{} = comment, attrs) do
     comment
     |> Comment.update_comment_changeset(attrs)
