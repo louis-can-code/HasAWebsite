@@ -75,6 +75,14 @@ defmodule HasAWebsite.Accounts.User do
   end
 
   @doc """
+  A user changeset that takes a user and returns it as a changeset.
+  """
+  @spec user_changeset(__MODULE__.new_t()) :: Ecto.Changeset.t()
+  def user_changeset(user) do
+    change(user)
+  end
+
+  @doc """
   A user changeset for registering a user.
 
   ## Options
@@ -83,6 +91,8 @@ defmodule HasAWebsite.Accounts.User do
       uniqueness of the email, useful when displaying live validations.
       Defaults to `true`.
   """
+  @spec registration_changeset(__MODULE__.new_t(), map(), opts :: Keyword.t()) ::
+          Ecto.Changeset.t()
   def registration_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email, :username])
@@ -149,6 +159,7 @@ defmodule HasAWebsite.Accounts.User do
       uniqueness of the email, useful when displaying live validations.
       Defaults to `true`.
   """
+  @spec email_changeset(__MODULE__.t(), map(), opts :: Keyword.t()) :: Ecto.Changeset.t()
   def email_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email])
@@ -185,6 +196,7 @@ defmodule HasAWebsite.Accounts.User do
   @doc """
   A user changeset for promoting a user to the creator role
   """
+  @spec creator_promotion_changeset(__MODULE__.t(), __MODULE__.t()) :: Ecto.Changeset.t()
   def creator_promotion_changeset(promoter, user) do
     user
     |> change()
@@ -197,6 +209,8 @@ defmodule HasAWebsite.Accounts.User do
   @doc """
   A user changeset for registering creators
   """
+  @spec creator_registration_changeset(__MODULE__.new_t(), map(), opts :: Keyword.t()) ::
+          Ecto.Changeset.t()
   def creator_registration_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email, :password, :username])
@@ -211,6 +225,8 @@ defmodule HasAWebsite.Accounts.User do
   @doc """
   A user changeset for registering admins
   """
+  @spec admin_registration_changeset(__MODULE__.new_t(), map(), opts :: Keyword.t()) ::
+          Ecto.Changeset.t()
   def admin_registration_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email, :password, :username])
@@ -227,6 +243,7 @@ defmodule HasAWebsite.Accounts.User do
 
   It requires the username to change otherwise an error is added.
   """
+  @spec username_changeset(__MODULE__.t(), map()) :: Ecto.Changeset.t()
   def username_changeset(user, attrs) do
     user
     |> cast(attrs, [:username])
@@ -248,6 +265,7 @@ defmodule HasAWebsite.Accounts.User do
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
   """
+  @spec password_changeset(__MODULE__.t(), map(), opts :: Keyword.t()) :: Ecto.Changeset.t()
   def password_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:password])
@@ -287,6 +305,7 @@ defmodule HasAWebsite.Accounts.User do
   @doc """
   Confirms the account by setting `confirmed_at`.
   """
+  @spec confirm_changeset(__MODULE__.new_t()) :: Ecto.Changeset.t()
   def confirm_changeset(user) do
     now = DateTime.utc_now(:second)
     change(user, confirmed_at: now)
@@ -298,7 +317,8 @@ defmodule HasAWebsite.Accounts.User do
   If there is no user or the user doesn't have a password, we call
   `Bcrypt.no_user_verify/0` to avoid timing attacks.
   """
-  def valid_password?(%HasAWebsite.Accounts.User{hashed_password: hashed_password}, password)
+  @spec valid_password?(__MODULE__.t(), String.t()) :: boolean()
+  def valid_password?(%__MODULE__{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
     Bcrypt.verify_pass(password, hashed_password)
   end

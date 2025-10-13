@@ -2,10 +2,9 @@ defmodule HasAWebsiteWeb.UserRegistrationController do
   use HasAWebsiteWeb, :controller
 
   alias HasAWebsite.Accounts
-  alias HasAWebsite.Accounts.User
 
   def new(conn, _params) do
-    changeset = Accounts.change_user_email(%User{})
+    changeset = Accounts.change_user()
     render(conn, :new, changeset: changeset)
   end
 

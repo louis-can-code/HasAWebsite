@@ -204,10 +204,26 @@ defmodule HasAWebsite.Accounts do
       %Ecto.Changeset{data: %User{}}
 
   """
-  @spec change_user_email(User.new_t(), attrs :: map(), opts :: Keyword.t()) ::
+  @spec change_user_email(User.t(), attrs :: map(), opts :: Keyword.t()) ::
           Ecto.Changeset.t()
   def change_user_email(user, attrs \\ %{}, opts \\ []) do
     User.email_changeset(user, attrs, opts)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing a user. Defaults to a user with no fields filled in.
+
+  ## Examples
+
+      iex> change_user_email()
+      %Ecto.Changeset{data: %User{}}
+
+      iex> change_user_email(%User{username: "example"})
+      %Ecto.Changeset{data: %User{username: "example"}}
+  """
+  @spec change_user(user :: User.new_t()) :: Ecto.Changeset.t()
+  def change_user(user \\ %User{}) do
+    User.user_changeset(user)
   end
 
   @doc """
