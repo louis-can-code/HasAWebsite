@@ -62,18 +62,18 @@ if (process.env.NODE_ENV === "development") {
     //
     //   * click with "c" key pressed to open at caller location
     //   * click with "d" key pressed to open at function component definition location
-    let keyDown
+    let keyDown: string | null = null;
     window.addEventListener("keydown", e => keyDown = e.key)
     window.addEventListener("keyup", e => keyDown = null)
     window.addEventListener("click", e => {
       if(keyDown === "c"){
         e.preventDefault()
         e.stopImmediatePropagation()
-        reloader.openEditorAtCaller(e.target)
+        reloader.openEditorAtCaller(e.target as Node)
       } else if(keyDown === "d"){
         e.preventDefault()
         e.stopImmediatePropagation()
-        reloader.openEditorAtDef(e.target)
+        reloader.openEditorAtDef(e.target as Node)
       }
     }, true)
 

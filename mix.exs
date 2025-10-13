@@ -84,8 +84,13 @@ defmodule HasAWebsite.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind has_a_website", "esbuild has_a_website"],
+      "assets.build": [
+        "cmd --cd assets npm ci",
+        "tailwind has_a_website",
+        "esbuild has_a_website"
+      ],
       "assets.deploy": [
+        "cmd --cd assets npm ci",
         "tailwind has_a_website --minify",
         "esbuild has_a_website --minify",
         "phx.digest"

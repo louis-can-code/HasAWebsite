@@ -26,7 +26,12 @@
       "*": ["../deps/*"]
     },
     "allowJs": true,
-    "noEmit": true
+    "noEmit": true,
+    "lib": ["ES2020", "DOM"],
+    "typeRoots": ["./js/types", "./node_modules/@types"],
+    "types": ["node"],
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["js/**/*"]
 }
