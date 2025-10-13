@@ -69,14 +69,13 @@ defmodule HasAWebsite.Blog.Post do
 
   If no slug is provided, a unique slug will be generated
   """
-  @spec create_post_changeset(__MODULE__.new_t(), map(), HasAWebsite.Accounts.Scope.t()) ::
-          Ecto.Changeset.t()
-  def create_post_changeset(post, attrs, user_scope) do
-    post
+  @spec create_post_changeset(map(), integer()) :: Ecto.Changeset.t()
+  def create_post_changeset(attrs, author_id) do
+    %__MODULE__{}
     |> cast(attrs, [:title, :slug, :description, :content])
     |> validate_required([:title, :slug, :description, :content])
     |> validate_title()
-    |> put_change(:author_id, user_scope.user.id)
+    |> put_change(:author_id, author_id)
     |> put_change(:published_at, DateTime.utc_now(:second))
     |> validate_slug()
   end

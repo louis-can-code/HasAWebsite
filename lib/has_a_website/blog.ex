@@ -8,6 +8,7 @@ defmodule HasAWebsite.Blog do
   alias HasAWebsite.Repo
 
   alias HasAWebsite.Blog.Post
+  alias HasAWebsite.Blog.Comment
   alias HasAWebsite.Accounts.Scope
 
   @doc """
@@ -208,8 +209,8 @@ defmodule HasAWebsite.Blog do
       end
 
     with {:ok, post = %Post{}} <-
-           %Post{}
-           |> Post.create_post_changeset(attrs, scope)
+           attrs
+           |> Post.create_post_changeset(scope.user.id)
            |> Repo.insert() do
       # TODO: broadcast by user creating post
       broadcast_post(scope, {:created, post})
@@ -317,5 +318,106 @@ defmodule HasAWebsite.Blog do
     true = post.author_id == scope.user.id
 
     Post.changeset(post, attrs)
+  end
+
+  @doc """
+  Returns the list of comments.
+
+  ## Examples
+
+      iex> list_comments(123)
+      [%Comment{}, ...]
+
+  """
+  @spec list_comments(integer()) :: [Comment.t()]
+  def list_comments(post_id) do
+    Repo.all_by(Comment, post_id: post_id)
+  end
+
+  @doc """
+  Gets a single comment.
+
+  Raises `Ecto.NoResultsError` if the Comment does not exist.
+
+  ## Examples
+
+      iex> get_comment!(123)
+      %Comment{}
+
+      iex> get_comment!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  @spec get_comment!(integer()) :: Comment.t()
+  def get_comment!(id), do: Repo.get!(Comment, id)
+
+  @doc """
+  Creates a comment.
+
+  ## Examples
+
+      iex> create_comment(%{field: value})
+      {:ok, %Comment{}}
+
+      iex> create_comment(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  @spec create_comment(map()) :: {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
+  def create_comment(attrs) do
+    %Comment{}
+    |> Comment.create_comment_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a comment.
+
+  ## Examples
+
+      iex> update_comment(comment, %{field: new_value})
+      {:ok, %Comment{}}
+
+      iex> update_comment(comment, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  @spec update_comment(Comment.t(), map()) :: {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
+  def update_comment(%Comment{} = comment, attrs) do
+    comment
+    |> Comment.update_comment_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a comment.
+
+  ## Examples
+
+      iex> delete_comment(comment)
+      {:ok, %Comment{}}
+
+      iex> delete_comment(comment)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  # TODO: add authorisation
+  @spec delete_comment(Comment.t()) :: {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
+  def delete_comment(%Comment{} = comment) do
+    Repo.delete(comment)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking comment changes.
+
+  ## Examples
+
+      iex> change_comment(comment)
+      %Ecto.Changeset{data: %Comment{}}
+
+  """
+  @spec change_comment(Comment.new_t(), attrs :: map()) :: Ecto.Changeset.t()
+  def change_comment(%Comment{} = comment, attrs \\ %{}) do
+    Comment.changeset(comment, attrs)
   end
 end
