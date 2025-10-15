@@ -1,6 +1,8 @@
 defmodule HasAWebsiteWeb.Plugs.EnsureRole do
   import Plug.Conn
 
+  @behaviour Plug
+
   @moduledoc """
   Ensures a user has a given role before accessing
 
@@ -17,11 +19,11 @@ defmodule HasAWebsiteWeb.Plugs.EnsureRole do
   alias HasAWebsite.Accounts
   alias HasAWebsite.Accounts.User
 
-  @doc false
+  @impl true
   @spec init(any()) :: any()
   def init(default), do: default
 
-  @doc false
+  @impl true
   @spec call(Plug.Conn.t(), atom() | [atom()]) :: Plug.Conn.t()
   def call(conn, roles) do
     roles = List.wrap(roles)
