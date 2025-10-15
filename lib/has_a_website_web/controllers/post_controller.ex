@@ -41,7 +41,8 @@ defmodule HasAWebsiteWeb.PostController do
 
   @spec show(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def show(conn, %{"slug" => slug}) do
-    with post when not is_tuple(post) <- Blog.get_post_by_slug(slug, preloads: [:author]),
+    with post when not is_tuple(post) <-
+           Blog.get_post_by_slug(slug, preloads: [:author, comments: 10]),
          do: render(conn, :show, post: post)
   end
 

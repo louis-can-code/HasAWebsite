@@ -19,4 +19,12 @@
     <:item title="Content">{@post.content}</:item>
     <:item title="Published at">{@post.published_at}</:item>
   </.list>
+
+  <h2>Comments</h2>
+  <hr />
+  <.table id="comments" rows={@post.replies}>
+    <:col :let={comment} label="User">{comment.user.username}</:col>
+    <:col :let={comment} label="Content">{comment.content}</:col>
+    <:col :let={comment} label="Published at">{comment.inserted_at}</:col>
+  </.table>
 </Layouts.app>

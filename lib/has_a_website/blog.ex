@@ -87,6 +87,8 @@ defmodule HasAWebsite.Blog do
   ## Options
     * `:preloads` - takes a list of atoms:
       - `:author` to preload the associated author
+      - `comments: comment_limit` to preload up to `comment_limit` associated comments
+        (defaults to 10 comments if no limit is given)
 
 
   ## Examples
@@ -94,8 +96,8 @@ defmodule HasAWebsite.Blog do
       iex> get_post_by_slug!("post-slug")
       %Post{}
 
-      iex> get_post_by_slug!("post-slug", preloads: [:author])
-      %Post{author: %User{}}
+      iex> get_post_by_slug!("post-slug", preloads: [:author, comments: 10])
+      %Post{author: %User{}, comments: [%Comments{}]}
 
       iex> get_post_by_slug!("unknown-slug")
       nil
@@ -104,12 +106,35 @@ defmodule HasAWebsite.Blog do
   def get_post_by_slug(slug, opts \\ []) when is_binary(slug) do
     preloads = Keyword.get(opts, :preloads, [])
 
+    preloads =
+      if Keyword.has_key?(preloads, :comments) do
+        Keyword.update(preloads, :comments, top_comments_query(10), &top_comments_query/1)
+      else
+        preloads
+      end
+
     post =
       Post
       |> preload(^preloads)
       |> Repo.get_by(slug: slug)
 
     if post, do: post, else: {:error, :not_found}
+  end
+
+  defp top_comments_query(limit) do
+    from c in Comment,
+      where: is_nil(c.replying_to_id),
+      order_by: [desc: c.inserted_at],
+      limit: ^limit,
+      preload: [:user, replies: ^top_reply_query()]
+  end
+
+  # TODO: add upvote/like system, and make requirement for top reply
+  defp top_reply_query() do
+    from c in Comment,
+      order_by: [desc: c.inserted_at],
+      limit: 1,
+      preload: [:user]
   end
 
   @doc """
