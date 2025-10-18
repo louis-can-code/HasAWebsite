@@ -4,8 +4,11 @@ defmodule HasAWebsite.BlogTest do
   alias HasAWebsite.Blog
 
   alias HasAWebsite.Blog.Post
+  alias HasAWebsite.Blog.Comment
 
-  import HasAWebsite.AccountsFixtures, only: [user_scope_fixture: 0, admin_scope_fixture: 0]
+  import HasAWebsite.AccountsFixtures,
+    only: [user_scope_fixture: 0, admin_scope_fixture: 0, creator_fixture: 0]
+
   import HasAWebsite.BlogFixtures
 
   @invalid_attrs %{description: nil, title: nil, slug: nil, content: nil}
@@ -16,7 +19,9 @@ defmodule HasAWebsite.BlogTest do
       other_scope = user_scope_fixture()
       post = post_fixture(scope)
       other_post = post_fixture(other_scope)
-      assert Blog.list_posts() == [post, other_post]
+
+      posts = Blog.list_posts()
+      assert post in posts && other_post in posts
     end
 
     test "returns all post, with author details" do
@@ -45,6 +50,8 @@ defmodule HasAWebsite.BlogTest do
       get_post = Blog.get_post_by_slug(post.slug, preloads: [:author])
       assert get_post.author.id == scope.user.id
     end
+
+    # TODO: test with comment preloads
 
     test "does not return non-existing post" do
       assert {:error, :not_found} == Blog.get_post_by_slug("unknown-slug")
@@ -261,6 +268,84 @@ defmodule HasAWebsite.BlogTest do
       scope = user_scope_fixture()
       post = post_fixture(scope)
       assert %Ecto.Changeset{} = Blog.change_post(scope, post)
+    end
+  end
+
+  @invalid_attrs %{content: nil}
+
+  setup do
+    scope =
+      creator_fixture()
+      |> HasAWebsite.Accounts.Scope.for_user()
+
+    post = post_fixture(scope)
+
+    %{scope: scope, post: post}
+  end
+
+  describe "list_comments/0" do
+    test "returns all comments", %{scope: scope, post: post} do
+      comment = comment_fixture(scope, post)
+      assert Blog.list_comments(post.id) == [comment]
+    end
+  end
+
+  describe "list_replies/0" do
+    test "returns all comment replies", %{scope: scope, post: post} do
+      comment = comment_fixture(scope, post)
+      reply = comment_fixture(scope, post, %{}, comment)
+      assert Blog.list_replies(post.id, comment.id) == [reply]
+    end
+  end
+
+  describe "get_comment!/1" do
+    test "returns the comment with given id", %{scope: scope, post: post} do
+      comment = comment_fixture(scope, post)
+      assert Blog.get_comment!(comment.id) == comment
+    end
+  end
+
+  describe "create_comment/1" do
+    test "valid data creates a comment", %{scope: scope, post: post} do
+      valid_attrs = %{content: "some content"}
+
+      assert {:ok, %Comment{} = comment} = Blog.create_comment(scope, post, valid_attrs)
+      assert comment.content == "some content"
+    end
+
+    test "invalid data returns error changeset", %{scope: scope, post: post} do
+      assert {:error, %Ecto.Changeset{}} = Blog.create_comment(scope, post, @invalid_attrs)
+    end
+  end
+
+  describe "update_comment/2" do
+    test "valid data updates the comment", %{scope: scope, post: post} do
+      comment = comment_fixture(scope, post)
+      update_attrs = %{content: "some updated content"}
+
+      assert {:ok, %Comment{} = comment} = Blog.update_comment(scope, comment, update_attrs)
+      assert comment.content == "some updated content"
+    end
+
+    test "invalid data returns error changeset", %{scope: scope, post: post} do
+      comment = comment_fixture(scope, post)
+      assert {:error, %Ecto.Changeset{}} = Blog.update_comment(scope, comment, @invalid_attrs)
+      assert comment == Blog.get_comment!(comment.id)
+    end
+  end
+
+  describe "delete_comment/1" do
+    test "deletes the comment", %{scope: scope, post: post} do
+      comment = comment_fixture(scope, post)
+      assert {:ok, %Comment{}} = Blog.delete_comment(scope, comment)
+      assert_raise Ecto.NoResultsError, fn -> Blog.get_comment!(comment.id) end
+    end
+  end
+
+  describe "change_comment/1" do
+    test "returns a comment changeset", %{scope: scope, post: post} do
+      comment = comment_fixture(scope, post)
+      assert %Ecto.Changeset{} = Blog.change_comment(comment)
     end
   end
 end
