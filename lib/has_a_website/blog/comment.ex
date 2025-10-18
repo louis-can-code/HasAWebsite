@@ -92,6 +92,17 @@ defmodule HasAWebsite.Blog.Comment do
   def update_comment_changeset(comment, attrs) do
     comment
     |> cast(attrs, [:content])
+    |> validate_not_null([:content])
     |> validate_length(:content, min: 1, max: 1024)
+  end
+
+  defp validate_not_null(changeset, fields) do
+    Enum.reduce(fields, changeset, fn field, set ->
+      if get_change(set, field, :no_change) == nil do
+        add_error(set, field, "can not be null")
+      else
+        set
+      end
+    end)
   end
 end

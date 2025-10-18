@@ -346,7 +346,7 @@ defmodule HasAWebsite.Blog do
   end
 
   @doc """
-  Returns the list of comments.
+  Returns the list of comments on a post.
 
   ## Examples
 
@@ -357,6 +357,19 @@ defmodule HasAWebsite.Blog do
   @spec list_comments(integer()) :: [Comment.t()]
   def list_comments(post_id) do
     Repo.all_by(Comment, post_id: post_id)
+  end
+
+  @doc """
+  Returns the list of replies to a comment on a post
+
+  ## Example
+
+      iex> list_replies(12, 11)
+      [%Comment{}, ...]
+  """
+  @spec list_replies(integer(), integer()) :: [Comment.t()]
+  def list_replies(post_id, comment_id) do
+    Repo.all_by(Comment, post_id: post_id, replying_to_id: comment_id)
   end
 
   @doc """
@@ -396,7 +409,7 @@ defmodule HasAWebsite.Blog do
     |> Comment.create_comment_changeset(
       scope.user.id,
       post.id,
-      if(replying_to, do: replying_to.user_id, else: nil)
+      if(replying_to, do: replying_to.id, else: nil)
     )
     |> Repo.insert()
   end
@@ -413,9 +426,11 @@ defmodule HasAWebsite.Blog do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_comment(Comment.new_t(), map()) ::
+  @spec update_comment(Scope.t(), Comment.new_t(), map()) ::
           {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
-  def update_comment(%Comment{} = comment, attrs) do
+  def update_comment(scope, %Comment{} = comment, attrs) do
+    true = comment.user_id == scope.user.id
+
     comment
     |> Comment.update_comment_changeset(attrs)
     |> Repo.update()
@@ -433,9 +448,11 @@ defmodule HasAWebsite.Blog do
       {:error, %Ecto.Changeset{}}
 
   """
-  # TODO: add authorisation
-  @spec delete_comment(Comment.t()) :: {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
-  def delete_comment(%Comment{} = comment) do
+  @spec delete_comment(Scope.t(), Comment.t()) ::
+          {:ok, Comment.t()} | {:error, Ecto.Changeset.t()}
+  def delete_comment(scope, %Comment{} = comment) do
+    true = scope.user.id == comment.user_id || scope.user.role == :admin
+
     Repo.delete(comment)
   end
 
