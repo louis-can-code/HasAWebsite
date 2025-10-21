@@ -107,11 +107,12 @@ defmodule HasAWebsite.Blog do
     preloads = Keyword.get(opts, :preloads, [])
 
     preloads =
-      if Keyword.has_key?(preloads, :comments) do
-        Keyword.update(preloads, :comments, top_comments_query(10), &top_comments_query/1)
-      else
-        preloads
-      end
+      Enum.reduce(preloads, [], fn
+        :author, acc -> [:author | acc]
+        :comments, acc -> [{:comments, top_comments_query(10)} | acc]
+        {:comments, limit}, acc -> [{:comments, top_comments_query(limit)} | acc]
+        _, acc -> acc
+      end)
 
     post =
       Post
