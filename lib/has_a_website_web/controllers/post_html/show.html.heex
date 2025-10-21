@@ -22,7 +22,7 @@
 
   <h2>Comments</h2>
   <hr />
-  <.table id="comments" rows={@post.replies}>
+  <.table id="comments" rows={@post.comments}>
     <:col :let={comment} label="User">{comment.user.username}</:col>
     <:col :let={comment} label="Content">{comment.content}</:col>
     <:col :let={comment} label="Published at">{comment.inserted_at}</:col>
