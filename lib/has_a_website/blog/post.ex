@@ -15,6 +15,7 @@ defmodule HasAWebsite.Blog.Post do
 
           # Associations
           author: HasAWebsite.Accounts.User.t() | Ecto.Association.NotLoaded.t(),
+          comments: [HasAWebsite.Blog.Comment.t()] | Ecto.Association.NotLoaded.t(),
 
           # Timestamps
           inserted_at: DateTime.t(),
@@ -36,6 +37,7 @@ defmodule HasAWebsite.Blog.Post do
 
           # Associations
           author: HasAWebsite.Accounts.User.t() | Ecto.Association.NotLoaded.t() | nil,
+          comments: [HasAWebsite.Blog.Comment.t()] | Ecto.Association.NotLoaded.t() | nil,
 
           # Timestamps
           inserted_at: DateTime.t() | nil,
@@ -51,6 +53,8 @@ defmodule HasAWebsite.Blog.Post do
     field :last_updated_at, :utc_datetime
 
     belongs_to :author, HasAWebsite.Accounts.User
+
+    has_many :comments, HasAWebsite.Blog.Comment
 
     timestamps(type: :utc_datetime)
   end
