@@ -9,7 +9,7 @@
           <% else %>
             Don't have an account? <.link
               navigate={~p"/users/register"}
-              class="font-semibold text-brand hover:underline"
+              class="font-semibold text-base-content hover:underline"
               phx-no-format
             >Sign up</.link> for an account now.
           <% end %>
@@ -17,7 +17,10 @@
       </.header>
     </div>
 
-    <div :if={local_mail_adapter?()} class="alert alert-info">
+    <div
+      :if={local_mail_adapter?()}
+      class="flex gap-2 p-4 mb-4 text-sm text-white/80 rounded-lg w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap bg-info/80"
+    >
       <.icon name="hero-information-circle" class="size-6 shrink-0" />
       <div>
         <p>You are running the local mail adapter.</p>
@@ -37,12 +40,12 @@
         required
         phx-mounted={JS.focus()}
       />
-      <.button class="btn btn-primary w-full">
+      <.button variant="primary" class="w-full">
         Log in with email <span aria-hidden="true">→</span>
       </.button>
     </.form>
 
-    <div class="divider">or</div>
+    <.divider>OR</.divider>
 
     <.form :let={f} for={@form} as={:user} id="login_form_password" action={~p"/users/log-in"}>
       <.input
@@ -59,10 +62,10 @@
         label="Password"
         autocomplete="current-password"
       />
-      <.button class="btn btn-primary w-full" name={@form[:remember_me].name} value="true">
+      <.button variant="primary" class="w-full" name={@form[:remember_me].name} value="true">
         Log in and stay logged in <span aria-hidden="true">→</span>
       </.button>
-      <.button class="btn btn-primary btn-soft w-full mt-2">
+      <.button variant="soft" class="w-full mt-2">
         Log in only this time
       </.button>
     </.form>

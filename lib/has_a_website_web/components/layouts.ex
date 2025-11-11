@@ -5,6 +5,8 @@ defmodule HasAWebsiteWeb.Layouts do
   """
   use HasAWebsiteWeb, :html
 
+  alias HasAWebsiteWeb.CoreComponents
+
   # Embed all files in layouts/* within this module.
   # The default root.html.heex file contains the HTML
   # skeleton of your application, namely HTML headers
@@ -35,7 +37,7 @@ defmodule HasAWebsiteWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
+    <header class="w-full bg-info px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
         <a href="/" class="flex-1 flex w-fit items-center gap-2">
           <img src={~p"/images/logo.svg"} width="36" />
@@ -45,18 +47,10 @@ defmodule HasAWebsiteWeb.Layouts do
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4 items-center">
           <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
+            <a href="https://github.com/louis-can-code" class="btn btn-ghost">GitHub</a>
           </li>
           <li>
             <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
-            </a>
           </li>
         </ul>
       </div>
@@ -92,8 +86,10 @@ defmodule HasAWebsiteWeb.Layouts do
         id="client-error"
         kind={:error}
         title={gettext("We can't find the internet")}
-        phx-disconnected={show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")}
-        phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
+        phx-disconnected={
+          CoreComponents.show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")
+        }
+        phx-connected={CoreComponents.hide("#client-error") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
         {gettext("Attempting to reconnect")}
@@ -104,8 +100,10 @@ defmodule HasAWebsiteWeb.Layouts do
         id="server-error"
         kind={:error}
         title={gettext("Something went wrong!")}
-        phx-disconnected={show(".phx-server-error #server-error") |> JS.remove_attribute("hidden")}
-        phx-connected={hide("#server-error") |> JS.set_attribute({"hidden", ""})}
+        phx-disconnected={
+          CoreComponents.show(".phx-server-error #server-error") |> JS.remove_attribute("hidden")
+        }
+        phx-connected={CoreComponents.hide("#server-error") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
         {gettext("Attempting to reconnect")}
@@ -122,19 +120,11 @@ defmodule HasAWebsiteWeb.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border border-base-200 bg-base-100 brightness-200 left-0 in-data-[theme=light]:left-1/3 in-data-[theme=dark]:left-2/3 transition-[left]" />
+    <div class="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-800 shadow-md relative flex flex-row items-center border-2 rounded-full">
+      <div class="absolute w-1/2 h-full rounded-full border-[1.5] border-gray-500 dark:border-gray-200 dark:bg-gray-100 bg-gray-300 brightness-200 left-0 in-data-[theme=light]:left-0 in-data-[theme=dark]:left-1/2 transition-[left]" />
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
-        phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="system"
-      >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
-
-      <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="flex p-2 cursor-pointer w-1/2"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
@@ -142,7 +132,7 @@ defmodule HasAWebsiteWeb.Layouts do
       </button>
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="flex p-2 cursor-pointer w-1/2"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >

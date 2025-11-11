@@ -13,13 +13,8 @@
     <script>
       (() => {
         const setTheme = (theme) => {
-          if (theme === "system") {
-            localStorage.removeItem("phx:theme");
-            document.documentElement.removeAttribute("data-theme");
-          } else {
             localStorage.setItem("phx:theme", theme);
             document.documentElement.setAttribute("data-theme", theme);
-          }
         };
         if (!document.documentElement.hasAttribute("data-theme")) {
           setTheme(localStorage.getItem("phx:theme") || "system");
@@ -31,22 +26,22 @@
     </script>
   </head>
   <body>
-    <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+    <ul class="py-1 bg-info w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
       <%= if @current_scope do %>
         <li>
           {@current_scope.user.username}
         </li>
-        <li>
+        <li class="rounded-br-lg p-1 hover:bg-gray-500">
           <.link href={~p"/users/settings"}>Settings</.link>
         </li>
-        <li>
+        <li class="rounded-br-lg p-1 hover:bg-gray-500">
           <.link href={~p"/users/log-out"} method="delete">Log out</.link>
         </li>
       <% else %>
-        <li>
+        <li class="rounded-br-lg p-1 hover:bg-gray-500">
           <.link href={~p"/users/register"}>Register</.link>
         </li>
-        <li>
+        <li class="rounded-br-lg p-1 hover:bg-gray-500">
           <.link href={~p"/users/log-in"}>Log in</.link>
         </li>
       <% end %>

@@ -2,6 +2,27 @@
    https://tailwindcss.com/docs/configuration */
 
 @import "tailwindcss" source(none);
+
+@layer base {
+   :root, [data-theme="light"] {
+      --color-info: #75BDD1;
+      --color-error: #E01E00;
+      --color-base-content: #3c1518;
+   }
+
+   [data-theme="dark"] {
+      --color-info: #273da1;
+      --color-error: #E01E00;
+      --color-base-content: #3c1518;
+   }
+}
+
+@theme {
+   --color-info: var(--color-info);
+   --color-error: var(--color-error);
+   --color-base-content: var(--color-base-content);
+}
+
 @source "../css";
 @source "../js";
 @source "../../lib/has_a_website_web";

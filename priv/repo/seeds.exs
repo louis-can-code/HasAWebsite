@@ -9,3 +9,11 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+
+admin_user = %{
+  username: "testadmin",
+  password: "Hello World!",
+  email: "test.admin@admintest.dev"
+}
+
+HasAWebsite.Accounts.register_admin(admin_user)

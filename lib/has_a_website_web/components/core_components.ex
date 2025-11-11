@@ -2,13 +2,8 @@ defmodule HasAWebsiteWeb.CoreComponents do
   @moduledoc """
   Provides core UI components.
 
-  At first glance, this module may seem daunting, but its goal is to provide
-  core building blocks for your application, such as tables, forms, and
-  inputs. The components consist mostly of markup and are well-documented
-  with doc strings and declarative assigns. You may customize and style
-  them in any way you want, based on your application growth and needs.
-
-  The foundation for styling is Tailwind CSS, a utility-first CSS framework.
+  Reconstructured from the generated core components file, avoiding use of DaisyUI.
+  The foundation for styling is TailwindCSS, a utility-first CSS framework.
   Here are useful references:
 
     * [Tailwind CSS](https://tailwindcss.com) - the foundational framework
@@ -20,7 +15,6 @@ defmodule HasAWebsiteWeb.CoreComponents do
     * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) -
       the component system used by Phoenix. Some components, such as `<.link>`
       and `<.form>`, are defined there.
-
   """
   use Phoenix.Component
   use Gettext, backend: HasAWebsiteWeb.Gettext
@@ -28,12 +22,12 @@ defmodule HasAWebsiteWeb.CoreComponents do
   alias Phoenix.LiveView.JS
 
   @doc """
-  Renders flash notices.
+  Renders flash notices
 
   ## Examples
 
-      <.flash kind={:info} flash={@flash} />
-      <.flash kind={:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
+    <.flash kind={:info} flash={@flash} />
+    <.flash kind-{:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
   """
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
@@ -52,24 +46,25 @@ defmodule HasAWebsiteWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="fixed top-4 right-4 flex flex-col gap-0.5 z-50"
       {@rest}
     >
       <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
+        "p-4 mb-4 text-sm text-white/80 rounded-lg w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
+        @kind == :info && "bg-info/80 hover: bg-info/40",
+        @kind == :error && "bg-error/80 hover:bg-error/40"
       ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0 bg-info" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0 bg-error" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
-        <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
-        </button>
+        <div class="flex-1">
+          <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
+            <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+          </button>
+        </div>
       </div>
     </div>
     """
@@ -81,21 +76,29 @@ defmodule HasAWebsiteWeb.CoreComponents do
   ## Examples
 
       <.button>Send!</.button>
-      <.button phx-click="go" variant="primary">Send!</.button>
+      <.button phx-click="go" variant="soft">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
   attr :class, :string
-  attr :variant, :string, values: ~w(primary)
+  attr :variant, :string, values: ~w(soft primary)
+
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
+    variants = %{
+      "soft" => "bg-green-300 text-green-800 hover:bg-green-300/70 hover:text-green-800/70",
+      "primary" => "bg-error hover:bg-error/70 border-base-content",
+      nil => "bg-gray-200 hover:bg-gray-400"
+    }
 
-    assigns =
-      assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
-      end)
+    base_class = "shadow-md hover:cursor-pointer py-1 px-2 rounded"
+
+    class =
+      [assigns[:class], base_class, Map.fetch!(variants, assigns[:variant])]
+      |> Enum.filter(& &1)
+
+    assigns = assign(assigns, :class, class)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
@@ -145,14 +148,14 @@ defmodule HasAWebsiteWeb.CoreComponents do
 
   attr :type, :string,
     default: "text",
-    values: ~w(checkbox color date datetime-local email file month number password
+    values: ~w(checkbox colour date datetime-local email file month number password
                search select tel text textarea time url week)
 
   attr :field, Phoenix.HTML.FormField,
-    doc: "a form field struct retrieved from the form, for example: @form[:email]"
+    doc: "a form field struct retrieved from the form, e.g. @form[:email]"
 
   attr :errors, :list, default: []
-  attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
+  attr :checked, :boolean, doc: "the checked flag for checked inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
@@ -174,6 +177,7 @@ defmodule HasAWebsiteWeb.CoreComponents do
     |> input()
   end
 
+  # TODO: input daisyui classes
   def input(%{type: "checkbox"} = assigns) do
     assigns =
       assign_new(assigns, :checked, fn ->
@@ -181,19 +185,20 @@ defmodule HasAWebsiteWeb.CoreComponents do
       end)
 
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
+    <div class="border border-gray-300 rounded-lg p-6 mb-2">
+      <label class="cursor-pointer">
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
-        <span class="label">
+        <span class="flex-1 text-sm font-semibold text-gray-700">
           <input
             type="checkbox"
             id={@id}
             name={@name}
             value="true"
             checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
+            class={@class || "h-5 w-5 rounded shadow-sm focus:ring-purple-400 text-purple-500"}
             {@rest}
-          />{@label}
+          />
+          {@label}
         </span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
@@ -203,13 +208,19 @@ defmodule HasAWebsiteWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="border border-gray-300 rounded-lg p-4 mb-2 space-y-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="flex-1 text-sm font-semibold text-gray-700 mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
+          class={[
+            @class ||
+              "w-full px-4 py-3 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-400",
+            @errors != [] &&
+              (@error_class ||
+                 "bg-red-50 focus:ring-error focus:border-error hover:border-error/60 focus:outline-none")
+          ]}
           multiple={@multiple}
           {@rest}
         >
@@ -217,45 +228,53 @@ defmodule HasAWebsiteWeb.CoreComponents do
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error :for={msg <- @error}>{msg}</.error>
     </div>
     """
   end
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="border border-gray-300 rounded-lg p-2 mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="flex-1 text-sm font-semibold text-gray-700 mb-1">{@label}</span>
         <textarea
           id={@id}
           name={@name}
           class={[
-            @class || "w-full textarea",
-            @errors != [] && (@error_class || "textarea-error")
+            @class ||
+              "w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500
+              focus:border-blue-500 hover:border-gray-400 transition-colors resize-y placeholder-gray-400 min-h-24",
+            @errors != [] &&
+              (@error_class ||
+                 "border-error bg-red-50 focus:border-error focus:ring-1 focus:ring-error focus:outline-none")
           ]}
           {@rest}
-        >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+        >
+          {Phoenix.HTML.Form.normalize_value("textarea", @value)}
+        </textarea>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
 
-  # All other inputs text, datetime-local, url, password, etc. are handled here...
+  # All other types of input are handled here
   def input(assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="border border-gray-300 rounded-lg p-4 mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="flex-1 text-sm font-semibold text-gray-700 mb-1">{@label}</span>
         <input
-          type={@type}
-          name={@name}
           id={@id}
+          name={@name}
+          type={@type}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
+            @class || "w-full border shadow-md border-gray-400",
+            @errors != [] &&
+              (@error_class ||
+                 "border-error bg-red-50 focus:border-error focus:ring-1 focus:ring-error focus:outline-none")
           ]}
           {@rest}
         />
@@ -276,7 +295,7 @@ defmodule HasAWebsiteWeb.CoreComponents do
   end
 
   @doc """
-  Renders a header with title.
+  Renders a header with title
   """
   slot :inner_block, required: true
   slot :subtitle
@@ -299,14 +318,47 @@ defmodule HasAWebsiteWeb.CoreComponents do
   end
 
   @doc """
-  Renders a table with generic styling.
+  Renders a card with generic styling
+  """
+  attr :title, :string, required: true
+  attr :label, :string
 
-  ## Examples
+  attr :rest, :global, ~w(
+    accept autocomplete capture cols disabled form list max maxlength min minlength
+    multiple pattern placeholder readonly required rows size step phx-click
+  )
 
-      <.table id="users" rows={@users}>
-        <:col :let={user} label="id">{user.id}</:col>
-        <:col :let={user} label="username">{user.username}</:col>
-      </.table>
+  slot :inner_block, required: true
+
+  def card(assigns) do
+    ~H"""
+    <div
+      class="w-44 h-50 text-wrap border border-gray-300 shadow-lg text-base-content
+            hover:cursor-pointer flex flex-col group transition delay-50 duration-200 ease-in-out hover:-translate-y-1 hover:scale-110 overflow-hidden"
+      {@rest}
+    >
+      <div class="bg-amber-600 w-full p-2 grow group-hover:grow-0 delay-75 group-hover:delay-50 group-hover:origin-top duration-500">
+        <h2 class="font-bold group-hover:text-sm group-hover:truncate transition-all ease-in-out duration-300">
+          {@title}
+        </h2>
+        <p
+          :if={@label}
+          class="text-base-content/80 text-sm group-hover:text-xs transition-all ease-out delay-75 duration-200 overflow-ellipsis overflow-hidden"
+        >
+          {@label}
+        </p>
+      </div>
+      <div class="h-5 px-1 align-top group-hover:max-h-40 group-hover:origin-bottom duration-400">
+        <p class="leading-snug line-clamp-1 group-hover:line-clamp-7 transition-all text-sm delay-100 duration-300">
+          {render_slot(@inner_block)}
+        </p>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a table with generic styling
   """
   attr :id, :string, required: true
   attr :rows, :list, required: true
@@ -315,7 +367,7 @@ defmodule HasAWebsiteWeb.CoreComponents do
 
   attr :row_item, :any,
     default: &Function.identity/1,
-    doc: "the function for mapping each row before calling the :col and :action slots"
+    doc: "the function for mapping each row before calling the `:col` and `:action` slots"
 
   slot :col, required: true do
     attr :label, :string
@@ -330,9 +382,9 @@ defmodule HasAWebsiteWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
+    <table class="odd:bg-purple-300 even:bg-purple-100 shadow min-w-full divide-y divide-white">
       <thead>
-        <tr>
+        <tr class="bg-purple-500 flex justify-between p-1">
           <th :for={col <- @col}>{col[:label]}</th>
           <th :if={@action != []}>
             <span class="sr-only">{gettext("Actions")}</span>
@@ -377,9 +429,9 @@ defmodule HasAWebsiteWeb.CoreComponents do
 
   def list(assigns) do
     ~H"""
-    <ul class="list">
-      <li :for={item <- @item} class="list-row">
-        <div class="list-col-grow">
+    <ul class="flex flex-col bg-white rounded-lg border border-gray-200 divide-y divide-gray-200 shadow-sm">
+      <li :for={item <- @item} class="px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
+        <div class="flex justify-between items-center gap-4">
           <div class="font-bold">{item.title}</div>
           <div>{render_slot(item)}</div>
         </div>
@@ -389,23 +441,60 @@ defmodule HasAWebsiteWeb.CoreComponents do
   end
 
   @doc """
+  Renders a divider with generic styling
+
+  ## Examples
+
+      <.divider />
+      <.divider>example<./divider>
+      <.divider line_colour="border-violet-400" text_colour="text-blue-700">example</.divider>
+  """
+  attr :text_colour, :string, doc: "Set custom colour for text. e.g. `text-example-colour`"
+
+  attr :line_colour, :string,
+    doc: "Set custom colour for divider lines. e.g. `border-example-colour`"
+
+  slot :inner_block, doc: "Optional text content to display in the divider"
+
+  def divider(assigns) do
+    assigns = assign_new(assigns, :line_colour, fn -> "border-gray-300" end)
+
+    if Enum.empty?(assigns[:inner_block]) do
+      ~H"""
+      <div role="separator" class={["h-0 my-4 border-t", @line_colour]} />
+      """
+    else
+      assigns = assign_new(assigns, :text_colour, fn -> "text-gray-400" end)
+
+      ~H"""
+      <div role="separator" class="flex my-2 justify-between items-center">
+        <div class={["flex-1 h-0 border-t", @line_colour]} />
+        <p class={["px-3 font-semibold", @text_colour]}>{render_slot(@inner_block)}</p>
+        <div class={["flex-1 h-0 border-t", @line_colour]} />
+      </div>
+      """
+    end
+  end
+
+  @doc """
   Renders a [Heroicon](https://heroicons.com).
 
-  Heroicons come in three styles – outline, solid, and mini.
-  By default, the outline style is used, but solid and mini may
-  be applied by using the `-solid` and `-mini` suffix.
+  Heroicons come in three different styles - outline, solid and mini.
+  By default, the outline style is used, but solid and mini may be
+  applied by using the `-solid` and `-mini` suffix.
 
-  You can customize the size and colors of the icons by setting
-  width, height, and background color classes.
+  You can customise the size and colors of the icons by setting
+  width, height, and background colour classes.
 
-  Icons are extracted from the `deps/heroicons` directory and bundled within
-  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
+  Icons are extracted from the `deps/heroicons` directory and bundled
+  within your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
 
   ## Examples
 
       <.icon name="hero-x-mark" />
       <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
   """
+
   attr :name, :string, required: true
   attr :class, :string, default: "size-4"
 
@@ -416,7 +505,6 @@ defmodule HasAWebsiteWeb.CoreComponents do
   end
 
   ## JS Commands
-
   def show(js \\ %JS{}, selector) do
     JS.show(js,
       to: selector,
