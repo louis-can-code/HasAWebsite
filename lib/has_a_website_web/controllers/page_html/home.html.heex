@@ -1,4 +1,25 @@
 <Layouts.flash_group flash={@flash} />
+<ul class="py-1 sm:py-2 bg-info w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end sm:text-lg">
+  <li><Layouts.theme_toggle /></li>
+  <%= if @current_scope do %>
+    <li>
+      {@current_scope.user.username}
+    </li>
+    <li class="rounded-br-lg p-1 hover:bg-gray-500 hover:cursor-pointer">
+      <.link href={~p"/users/settings"}>Settings</.link>
+    </li>
+    <li class="rounded-br-lg p-1 hover:bg-gray-500 hover:cursor-pointer">
+      <.link href={~p"/users/log-out"} method="delete">Log out</.link>
+    </li>
+  <% else %>
+    <li class="rounded-br-lg p-1 hover:bg-gray-500 hover:cursor-pointer">
+      <.link href={~p"/users/register"}>Register</.link>
+    </li>
+    <li class="rounded-br-lg p-1 hover:bg-gray-500 hover:cursor-pointer">
+      <.link href={~p"/users/log-in"}>Log in</.link>
+    </li>
+  <% end %>
+</ul>
 <div class="left-160 fixed inset-y-0 right-0 z-0 hidden lg:block xl:left-200">
   <svg
     viewBox="0 0 1480 957"

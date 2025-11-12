@@ -26,26 +26,6 @@
     </script>
   </head>
   <body>
-    <ul class="py-1 bg-info w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_scope do %>
-        <li>
-          {@current_scope.user.username}
-        </li>
-        <li class="rounded-br-lg p-1 hover:bg-gray-500">
-          <.link href={~p"/users/settings"}>Settings</.link>
-        </li>
-        <li class="rounded-br-lg p-1 hover:bg-gray-500">
-          <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-        </li>
-      <% else %>
-        <li class="rounded-br-lg p-1 hover:bg-gray-500">
-          <.link href={~p"/users/register"}>Register</.link>
-        </li>
-        <li class="rounded-br-lg p-1 hover:bg-gray-500">
-          <.link href={~p"/users/log-in"}>Log in</.link>
-        </li>
-      <% end %>
-    </ul>
     {@inner_content}
   </body>
 </html>
