@@ -1,3 +1,8 @@
+declare module "*.svg" {
+  const content: string;
+  export default content;
+}
+
 declare module "phoenix-colocated/has_a_website" {
     import { Hooks } from "phoenix_live_view";
 

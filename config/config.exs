@@ -48,8 +48,11 @@ config :has_a_website, HasAWebsite.Mailer, adapter: Swoosh.Adapters.Local
 config :esbuild,
   version: "0.25.4",
   has_a_website: [
-    args:
-      ~w(js/app.ts --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+    args: ~w(js/app.ts --bundle --target=es2022 --outdir=../priv/static/assets/js
+       --external:/fonts/* --external:/images/*
+       --loader:.svg=text
+       --alias:@=.
+      ),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
