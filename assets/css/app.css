@@ -3,17 +3,23 @@
 
 @import "tailwindcss" source(none);
 
+body {
+   background-color: var(--color-background);
+}
+
 @layer base {
    :root, [data-theme="light"] {
       --color-info: #75BDD1;
       --color-error: #E01E00;
       --color-base-content: #3c1518;
+      --color-background: #fbfffa;
    }
 
    [data-theme="dark"] {
       --color-info: #273da1;
       --color-error: #E01E00;
       --color-base-content: #3c1518;
+      --color-background: #050006;
    }
 }
 
