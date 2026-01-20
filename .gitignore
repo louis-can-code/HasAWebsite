@@ -25,6 +25,9 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 has_a_website-*.tar
 
+# Ignore mix tasks cache
+.mix_tasks
+
 # Ignore assets that are produced by build tools.
 /priv/static/assets/
 
