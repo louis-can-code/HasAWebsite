@@ -281,10 +281,10 @@ defmodule HasAWebsite.Blog do
   end
 
   # generates a slug if:
-  # -no new slug was provided
-  # -a new title was provided
-  # -regenerate_slug option was set to true
-  # -generating a slug would change the slug
+  # - no new slug was provided
+  # - a new title was provided
+  # - regenerate_slug option was set to true
+  # - the new slug is not equivalent to the old one
   defp maybe_update_slug(post, attrs, opts) do
     with true <- !Map.has_key?(attrs, :slug),
          true <- Map.has_key?(attrs, :title),
@@ -355,6 +355,7 @@ defmodule HasAWebsite.Blog do
       [%Comment{}, ...]
 
   """
+  # TODO: Paginate
   @spec list_comments(integer()) :: [Comment.t()]
   def list_comments(post_id) do
     Repo.all_by(Comment, post_id: post_id)
@@ -368,6 +369,7 @@ defmodule HasAWebsite.Blog do
       iex> list_replies(12, 11)
       [%Comment{}, ...]
   """
+  # TODO: Paginate
   @spec list_replies(integer(), integer()) :: [Comment.t()]
   def list_replies(post_id, comment_id) do
     Repo.all_by(Comment, post_id: post_id, replying_to_id: comment_id)
