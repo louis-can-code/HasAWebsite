@@ -7,6 +7,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: postgres-dev
+
+    secrets:
+      - db_password
   garage:
     image: dxflrs/garage:v2.2.0
     network_mode: "host"
@@ -18,4 +21,4 @@ services:
 
 secrets:
   db_password:
-    file: .secrets/db_password.txt
+    file: ./.secrets/db_password.txt
