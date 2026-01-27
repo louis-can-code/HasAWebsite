@@ -3,7 +3,10 @@ import Config
 # Configure your database
 config :has_a_website, HasAWebsite.Repo,
   username: "postgres",
-  password: "postgres",
+  password:
+    "./.secrets/db_password.txt"
+    |> File.read!()
+    |> String.trim(),
   hostname: "localhost",
   database: "has_a_website_dev",
   stacktrace: true,
