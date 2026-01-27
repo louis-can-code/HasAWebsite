@@ -22,6 +22,9 @@ erl_crash.dump
 # Temporary files, for example, from tests.
 /tmp/
 
+# Ignore secrets
+/.secrets/
+
 # Ignore package tarball (built via "mix hex.build").
 has_a_website-*.tar
 
