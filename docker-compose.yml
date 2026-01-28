@@ -1,24 +1,29 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-      POSTGRES_DB: has_a_website_dev
+    postgres:
+        image: postgres:16-alpine
+        ports:
+            - 5432:5432
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+            POSTGRES_DB: has_a_website_dev
 
-    secrets:
-      - db_password
-  garage:
-    image: dxflrs/garage:v2.2.0
-    network_mode: "host"
-    restart: unless-stopped
-    volumes:
-      - ./garage.toml:/etc/garage.toml
-      - ./.garage/meta:/var/lib/garage/meta
-      - ./.garage/data:/var/lib/garage/data
+        secrets:
+            - db_password
+    garage:
+        image: dxflrs/garage:v2.2.0
+        network_mode: "host"
+        restart: unless-stopped
+        volumes:
+            - ./garage.toml:/etc/garage.toml
+            - ./.garage/meta:/var/lib/garage/meta
+            - ./.garage/data:/var/lib/garage/data
+            - ./.garage/snapshots:/var/lib/garage/snapshots
+        secrets:
+            - rpc_secret
 
 secrets:
-  db_password:
-    file: ./.secrets/db_password.txt
+    db_password:
+        file: ./.secrets/db_password.txt
+    rpc_secret:
+        file: ./.secrets/rpc_secret.txt
