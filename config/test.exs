@@ -10,7 +10,10 @@ config :bcrypt_elixir, :log_rounds, 1
 # Run `mix help test` for more information.
 config :has_a_website, HasAWebsite.Repo,
   username: "postgres",
-  password: "postgres",
+  password:
+    "./.secrets/db_password.txt"
+    |> File.read!()
+    |> String.trim(),
   hostname: "localhost",
   database: "has_a_website_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
