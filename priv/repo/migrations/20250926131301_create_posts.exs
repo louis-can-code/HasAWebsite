@@ -1,5 +1,8 @@
 defmodule HasAWebsite.Repo.Migrations.CreatePosts do
   use Ecto.Migration
+  @moduledoc """
+  Migration to create the Post table.
+  """
 
   def change do
     create table(:posts) do
@@ -8,7 +11,6 @@ defmodule HasAWebsite.Repo.Migrations.CreatePosts do
       add :description, :text, null: false
       add :content, :text, null: false
       add :published_at, :utc_datetime, null: false
-      add :last_updated_at, :utc_datetime
       add :author_id, references(:users, on_delete: :nothing), null: false
 
       timestamps(type: :utc_datetime)

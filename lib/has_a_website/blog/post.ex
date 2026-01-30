@@ -2,6 +2,10 @@ defmodule HasAWebsite.Blog.Post do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @moduledoc """
+  Post schema definition, and changeset creation/validation for posts
+  """
+
   @type t :: %__MODULE__{
           # Required fields
           id: integer(),
@@ -10,7 +14,6 @@ defmodule HasAWebsite.Blog.Post do
           description: String.t(),
           content: String.t(),
           published_at: DateTime.t(),
-          last_updated_at: DateTime.t(),
           author_id: integer(),
 
           # Associations
@@ -32,7 +35,6 @@ defmodule HasAWebsite.Blog.Post do
           description: String.t() | nil,
           content: String.t() | nil,
           published_at: DateTime.t() | nil,
-          last_updated_at: DateTime.t() | nil,
           author_id: integer() | nil,
 
           # Associations
@@ -50,7 +52,6 @@ defmodule HasAWebsite.Blog.Post do
     field :description, :string
     field :content, :string
     field :published_at, :utc_datetime
-    field :last_updated_at, :utc_datetime
 
     belongs_to :author, HasAWebsite.Accounts.User
 
@@ -122,7 +123,6 @@ defmodule HasAWebsite.Blog.Post do
       |> validate_not_null([:title, :slug, :description, :content])
       |> validate_title()
       |> validate_length(:description, min: 1, max: 256)
-      |> put_change(:last_updated_at, DateTime.utc_now(:second))
 
     if changeset.data.slug != get_field(changeset, :slug) do
       validate_slug(changeset)

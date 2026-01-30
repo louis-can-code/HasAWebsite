@@ -161,7 +161,7 @@ defmodule HasAWebsite.BlogTest do
       assert post.slug == "new-slug"
       assert post.content == "some updated content"
       assert !is_nil(post.published_at)
-      assert !is_nil(post.last_updated_at)
+      assert !is_nil(post.updated_at)
     end
 
     test "updated slug maintains unique constraint" do
