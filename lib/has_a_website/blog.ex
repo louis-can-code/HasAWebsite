@@ -7,9 +7,9 @@ defmodule HasAWebsite.Blog do
 
   alias HasAWebsite.Repo
 
-  alias HasAWebsite.Blog.Post
-  alias HasAWebsite.Blog.Comment
   alias HasAWebsite.Accounts.Scope
+  alias HasAWebsite.Blog.Comment
+  alias HasAWebsite.Blog.Post
 
   @doc """
   Subscribes to scoped notifications about any post changes.
@@ -131,7 +131,7 @@ defmodule HasAWebsite.Blog do
   end
 
   # TODO: add upvote/like system, and make requirement for top reply
-  defp top_reply_query() do
+  defp top_reply_query do
     from c in Comment,
       order_by: [desc: c.inserted_at],
       limit: 1,
