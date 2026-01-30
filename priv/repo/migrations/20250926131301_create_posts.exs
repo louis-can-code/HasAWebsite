@@ -9,6 +9,7 @@ defmodule HasAWebsite.Repo.Migrations.CreatePosts do
       add :title, :citext, null: false
       add :slug, :string, null: false
       add :description, :text, null: false
+      add :header_img_url, :string, null: true
       add :content, :text, null: false
       add :published_at, :utc_datetime, null: false
       add :author_id, references(:users, on_delete: :nothing), null: false

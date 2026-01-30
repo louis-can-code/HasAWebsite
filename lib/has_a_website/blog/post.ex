@@ -12,6 +12,7 @@ defmodule HasAWebsite.Blog.Post do
           title: String.t(),
           slug: String.t(),
           description: String.t(),
+          header_img_url: String.t() | nil,
           content: String.t(),
           published_at: DateTime.t(),
           author_id: integer(),
@@ -33,6 +34,7 @@ defmodule HasAWebsite.Blog.Post do
           title: String.t() | nil,
           slug: String.t() | nil,
           description: String.t() | nil,
+          header_img_url: String.t() | nil,
           content: String.t() | nil,
           published_at: DateTime.t() | nil,
           author_id: integer() | nil,
@@ -50,6 +52,7 @@ defmodule HasAWebsite.Blog.Post do
     field :title, :string
     field :slug, :string
     field :description, :string
+    field :header_img_url, :string
     field :content, :string
     field :published_at, :utc_datetime
 
@@ -66,7 +69,7 @@ defmodule HasAWebsite.Blog.Post do
   @spec changeset(__MODULE__.new_t(), map()) :: Ecto.Changeset.t()
   def changeset(post, attrs) do
     post
-    |> cast(attrs, [:title, :slug, :description, :content])
+    |> cast(attrs, [:title, :slug, :description, :header_img_url, :content])
   end
 
   @doc """
@@ -77,7 +80,7 @@ defmodule HasAWebsite.Blog.Post do
   @spec create_post_changeset(map(), integer()) :: Ecto.Changeset.t()
   def create_post_changeset(attrs, author_id) do
     %__MODULE__{}
-    |> cast(attrs, [:title, :slug, :description, :content])
+    |> cast(attrs, [:title, :slug, :description, :header_img_url, :content])
     |> validate_required([:title, :slug, :description, :content])
     |> validate_title()
     |> put_change(:author_id, author_id)
