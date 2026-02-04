@@ -29,7 +29,7 @@ defmodule HasAWebsiteWeb.UserSessionControllerTest do
       assert html =~ "Log in with email"
 
       assert html =~
-               ~s(<input type="email" name="user[email]" id="login_form_magic_email" value="#{user.email}")
+               ~s(<input id="login_form_magic_email" name="user[email]" type="email" value="#{user.email}")
     end
 
     test "renders login page (email + password)", %{conn: conn} do
