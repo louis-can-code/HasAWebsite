@@ -519,13 +519,13 @@ defmodule HasAWebsite.AccountsTest do
     end
 
     test "does not return user for invalid token" do
-      assert {:error, :not_found} == Accounts.get_user_by_session_token("oops")
+      assert nil == Accounts.get_user_by_session_token("oops")
     end
 
     test "does not return user for expired token", %{token: token} do
       dt = ~N[2020-01-01 00:00:00]
       {1, nil} = Repo.update_all(UserToken, set: [inserted_at: dt, authenticated_at: dt])
-      assert {:error, :not_found} == Accounts.get_user_by_session_token(token)
+      assert nil == Accounts.get_user_by_session_token(token)
     end
   end
 
@@ -588,7 +588,7 @@ defmodule HasAWebsite.AccountsTest do
       user = user_fixture()
       token = Accounts.generate_user_session_token(user)
       assert Accounts.delete_user_session_token(token) == :ok
-      assert {:error, :not_found} == Accounts.get_user_by_session_token(token)
+      assert nil == Accounts.get_user_by_session_token(token)
     end
   end
 

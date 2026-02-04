@@ -380,14 +380,10 @@ defmodule HasAWebsite.Accounts do
 
   If the token is valid `{user, token_inserted_at}` is returned, otherwise `nil` is returned.
   """
-  @spec get_user_by_session_token(binary()) :: {User.t(), DateTime.t()} | {:error, :not_found}
+  @spec get_user_by_session_token(binary()) :: {User.t(), DateTime.t()} | nil
   def get_user_by_session_token(token) do
     {:ok, query} = UserToken.verify_session_token_query(token)
-
-    case Repo.one(query) do
-      nil -> {:error, :not_found}
-      result -> result
-    end
+    Repo.one(query)
   end
 
   @doc """
